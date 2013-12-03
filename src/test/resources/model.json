@@ -1,14 +1,19 @@
 {
   version: '1.0',
-  defaultSchema: 'SALES',
+  defaultSchema: 'CUSTOM_TABLE',
   schemas: [
     {
-      name: 'SALES',
-      type: 'custom',
-      factory: 'net.hydromatic.optiq.impl.csv.CsvSchemaFactory',
-      operand: {
-        directory: 'file:///home/robert/Projekte/ozone/stratosphere-sql/src/test/resources/sales/DEPTS.csv'
-      }
+      name: 'CUSTOM_TABLE',
+      tables: [
+        {
+          name: 'DEPTS',
+          type: 'custom',
+          factory: 'eu.stratosphere.sql.schema.CsvTableFactory',
+          operand: {
+            file: '/home/robert/Projekte/ozone/stratosphere-sql/src/test/resources/sales/DEPTS.csv'
+          }
+        }
+      ]
     }
   ]
 }

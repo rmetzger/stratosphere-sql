@@ -19,7 +19,6 @@ package eu.stratosphere.sql.schema;
 
 import net.hydromatic.linq4j.*;
 import net.hydromatic.linq4j.expressions.*;
-
 import net.hydromatic.optiq.*;
 import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
@@ -169,6 +168,7 @@ public class CsvTable extends AbstractQueryable<Object[]>
     }
     return typeFactory.createStructType(Pair.zip(names, types));
   }
+  
 }
 
 // End CsvTable.java
