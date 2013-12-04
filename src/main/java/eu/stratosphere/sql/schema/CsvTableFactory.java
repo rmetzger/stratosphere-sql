@@ -40,12 +40,13 @@ public class CsvTableFactory implements TableFactory<CsvTable> {
 
   public CsvTable create(Schema schema, String name,
       Map<String, Object> map, RelDataType rowType) {
-    String fileName = (String) map.get("file");
-    final File file = new File(fileName);
-    final List<CsvFieldType> list = new ArrayList<CsvFieldType>();
-    final RelDataType rowType2 = CsvTable.deduceRowType(schema.getTypeFactory(), file, list);
-    final RelDataType rowType3 = rowType != null ? rowType : rowType2;
-    return new CsvTable(schema, name, file, rowType3, list);
+	  throw new RuntimeException("Here");
+//    String fileName = (String) map.get("file");
+//    final File file = new File(fileName);
+//    final List<CsvFieldType> list = new ArrayList<CsvFieldType>();
+//    final RelDataType rowType2 = CsvTable.deduceRowType(schema.getTypeFactory(), file, list);
+//    final RelDataType rowType3 = rowType != null ? rowType : rowType2;
+//    return new CsvTable(schema, name, file, rowType3, list);
   }
 }
 

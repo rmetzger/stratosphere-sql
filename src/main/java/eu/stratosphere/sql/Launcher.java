@@ -1,5 +1,10 @@
 package eu.stratosphere.sql;
 
+import java.lang.reflect.Type;
+
+import eu.stratosphere.pact.common.type.PactRecord;
+import net.hydromatic.linq4j.Enumerator;
+import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.jdbc.OptiqPrepare;
 import net.hydromatic.optiq.prepare.OptiqPrepareImpl;
 
@@ -8,12 +13,14 @@ import net.hydromatic.optiq.prepare.OptiqPrepareImpl;
 public class Launcher  {
 
 	public Launcher() {
-//		AdapterContext ctx = new AdapterContext();
-//		String sql = "SELECT * FROM TABLENAME";
-//		Type elementType = Object[].class;
-//		OptiqPrepare.PrepareResult<Object> prepared = new OptiqPrepareImpl()
-//		        .prepareSql(ctx, sql, null, elementType, -1);
-//		Object enumerable = prepared.getExecutable();
+		StratosphereContext ctx = new StratosphereContext();
+		String sql = "SELECT * FROM TABLENAME";
+		Type elementType = PactRecord.class;
+		OptiqPrepare.PrepareResult<PactRecord> prepared = new OptiqPrepareImpl()
+		        .prepareSql(ctx, sql, null, elementType, -1);
+		DataContext dataContext = new StratosphereContext();
+		Enumerator<PactRecord> enumerator = prepared.enumerator(dataContext);
+		
 	}
 	
 	public static void main(String[] args) throws Exception {
