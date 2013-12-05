@@ -14,7 +14,7 @@ public class Launcher  {
 
 	public Launcher() {
 		StratosphereContext ctx = new StratosphereContext();
-		String sql = "SELECT * FROM TABLENAME";
+		String sql = "SELECT * FROM DEPTS";
 		Type elementType = PactRecord.class;
 		OptiqPrepare.PrepareResult<PactRecord> prepared = new OptiqPrepareImpl()
 		        .prepareSql(ctx, sql, null, elementType, -1);

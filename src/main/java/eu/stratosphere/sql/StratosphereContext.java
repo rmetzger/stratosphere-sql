@@ -1,11 +1,16 @@
 package eu.stratosphere.sql;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptPlanner;
 import org.eigenbase.relopt.volcano.VolcanoPlanner;
 
+import eu.stratosphere.sql.schema.CsvSchema;
+import eu.stratosphere.sql.schema.CsvTable;
+import eu.stratosphere.sql.schema.CsvTableFactory;
+import net.hydromatic.linq4j.QueryProvider;
 import net.hydromatic.linq4j.expressions.ClassDeclaration;
 import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.Schema;
@@ -26,17 +31,44 @@ public class StratosphereContext implements OptiqPrepare.Context, DataContext {
 
     @Override
     public Schema getRootSchema() {
-        throw new RuntimeException();
+        QueryProvider queryProvider = new StratosphereQueryProvider();
+		return new StratosphereRootSchema(queryProvider, getTypeFactory());
     }
 
 	@Override
 	public ConnectionConfig config() {
-		throw new RuntimeException();
+		return new ConnectionConfig() {
+			
+			@Override
+			public boolean spark() {
+				return false;
+			}
+			
+			@Override
+			public String schema() {
+				return "default";
+			}
+			
+			@Override
+			public String model() {
+				return "default";
+			}
+			
+			@Override
+			public boolean materializationsEnabled() {
+				return false;
+			}
+			
+			@Override
+			public boolean autoTemp() {
+				return false;
+			}
+		};
 	}
 
 	@Override
 	public List<String> getDefaultSchemaPath() {
-		throw new RuntimeException();
+		return Collections.singletonList("Test");
 	}
 
 	@Override
