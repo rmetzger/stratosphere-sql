@@ -48,6 +48,13 @@ public class CsvTableFactory implements TableFactory<CsvTable> {
 //    final RelDataType rowType3 = rowType != null ? rowType : rowType2;
 //    return new CsvTable(schema, name, file, rowType3, list);
   }
+
+@Override
+public CsvTable create(SchemaPlus schema, String name,
+		Map<String, Object> operand, RelDataType rowType) {
+	// TODO Auto-generated method stub
+	return null;
+}
 }
 
 // End CsvTableFactory.java
