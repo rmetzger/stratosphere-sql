@@ -1,11 +1,15 @@
 package eu.stratosphere.sql;
 
 import java.io.PrintWriter;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Level;
 
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.ConnectionConfig.Lex;
+import net.hydromatic.optiq.rules.java.JavaRules;
+import net.hydromatic.optiq.rules.java.JavaRules.EnumerableLimitRel;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
 
@@ -26,9 +30,13 @@ import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
 import org.eigenbase.rel.rules.SwapJoinRule;
 import org.eigenbase.rel.rules.TableAccessRule;
 import org.eigenbase.rel.rules.UnionToDistinctRule;
+import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
+import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql2rel.RelDecorrelator;
+import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -52,42 +60,59 @@ public class Launcher  {
 		Function1<SchemaPlus, Schema> schemaFactory = new FakeItTillYouMakeIt();
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
-			TableAccessRule.INSTANCE,
-			RemoveTrivialProjectRule.INSTANCE,
-			
-			 ExpandConversionRule.INSTANCE,
-		      SwapJoinRule.INSTANCE,
-		      RemoveDistinctRule.INSTANCE,
-		      UnionToDistinctRule.INSTANCE,
-		      RemoveTrivialProjectRule.INSTANCE,
-		      RemoveTrivialCalcRule.INSTANCE,
-		      RemoveSortRule.INSTANCE,
-		
-		      TableAccessRule.INSTANCE, //
-		      MergeProjectRule.INSTANCE, //
-		      PushFilterPastProjectRule.INSTANCE, //
-		      PushFilterPastJoinRule.FILTER_ON_JOIN, //
-		      RemoveDistinctAggregateRule.INSTANCE, //
-		      ReduceAggregatesRule.INSTANCE, //
-		      SwapJoinRule.INSTANCE, //
-		      PushJoinThroughJoinRule.RIGHT, //
-		      PushJoinThroughJoinRule.LEFT, //
-		      PushSortPastProjectRule.INSTANCE //
+			(RelOptRule) DataSourceRule.INSTANCE
+				
+		//	TableAccessRule.INSTANCE,
+		//	RemoveTrivialProjectRule.INSTANCE 
+//			
+//			 ExpandConversionRule.INSTANCE,
+//		      SwapJoinRule.INSTANCE,
+//		      RemoveDistinctRule.INSTANCE,
+//		      UnionToDistinctRule.INSTANCE,
+//		      RemoveTrivialProjectRule.INSTANCE,
+//		      RemoveTrivialCalcRule.INSTANCE,
+//		      RemoveSortRule.INSTANCE,
+//		
+//		      TableAccessRule.INSTANCE, //
+//		      MergeProjectRule.INSTANCE, //
+//		      PushFilterPastProjectRule.INSTANCE, //
+//		      PushFilterPastJoinRule.FILTER_ON_JOIN, //
+//		      RemoveDistinctAggregateRule.INSTANCE, //
+//		      ReduceAggregatesRule.INSTANCE, //
+//		      SwapJoinRule.INSTANCE, //
+//		      PushJoinThroughJoinRule.RIGHT, //
+//		      PushJoinThroughJoinRule.LEFT, //
+//		      PushSortPastProjectRule.INSTANCE //
 		));
+		
 		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
 		String sql = "SELECT a.cnt "
 				+ "FROM (SELECT COUNT(*) AS cnt FROM tbl GROUP BY NAME) AS a, tbl  "
 				+ "WHERE a.cnt = tbl.DEPTNO "
 				+ "ORDER BY a.cnt ASC LIMIT 2";
+		// String sql = "SELECT * FROM tbl";
 		System.err.println("Sql = "+sql);
 		SqlNode root = planner.parse(sql);
 		SqlNode validated = planner.validate(root);
 		RelNode rel = planner.convert(validated);
-		System.err.println("Got rel = "+rel);
 		
+		// print out logical tree
+		System.err.println("Got rel = "+rel);
 		PrintWriter p = new PrintWriter(System.out);
-		RelWriter pw = new RelWriterImpl(p);
+		RelWriter pw = new RelWriterImpl(p,SqlExplainLevel.ALL_ATTRIBUTES, true);
 		rel.explain(pw);
+		
+		// Decorrelate
+		RelDecorrelator = new RelDecorrelator();
+		
+		// set high debugging level for optimizer
+		EigenbaseTrace.getPlannerTracer().setLevel(Level.ALL);
+ 	  	ConsoleHandler handler = new ConsoleHandler();
+        handler.setLevel(Level.ALL);
+        EigenbaseTrace.getPlannerTracer().addHandler(handler);
+	    
+		// call optimizer? with own rules?
+		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet(), rel);
 		
 //		printLogo();
 //		Launcher l = new Launcher();

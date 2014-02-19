@@ -1,4 +1,4 @@
-stratosphere-sql
+stratosphere-sql: Playground.
 ================
 
 Area 51: Secret project.
