@@ -55,6 +55,8 @@ public class CsvSchema extends AbstractSchema {
   @Override
   protected Map<String, Table> getTableMap() {
     final ImmutableMap.Builder<String, Table> builder = ImmutableMap.builder();
+    System.out.println("Working Directory = " +
+            System.getProperty("user.dir"));
     File[] files = directoryFile.listFiles(
         new FilenameFilter() {
           public boolean accept(File dir, String name) {

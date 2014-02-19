@@ -14,10 +14,10 @@ public class FakeItTillYouMakeIt implements Function1<SchemaPlus, Schema> {
 	@Override
 	public Schema apply(SchemaPlus incoming) {
 		CsvTableFactory fac = new CsvTableFactory();
-		RelDataType type = new FakeItType();
+		RelDataType type = new StratosphereRelType();
 		Table tbl = fac.create(incoming,"tbl", null, type);
 		// incoming.add("tbl", tbl);
-		Schema schema = new CsvSchema(incoming, "tbl", new File("hase"), false);
+		Schema schema = new CsvSchema(incoming, "tbl", new File("sales/"), false);
 		incoming.add("tbl", tbl);
 		return incoming.add(schema);
 		//return 

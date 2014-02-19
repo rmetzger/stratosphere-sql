@@ -42,6 +42,7 @@ public class Launcher  {
 		SqlNode root = planner.parse("SELECT * FROM tbl");
 		SqlNode validated = planner.validate(root);
 		RelNode rel = planner.convert(validated);
+		System.err.println("Got rel = "+rel);
 		
 //		printLogo();
 //		Launcher l = new Launcher();
