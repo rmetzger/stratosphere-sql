@@ -73,11 +73,12 @@ public class CsvSchema extends AbstractSchema {
         tableName = tableName.substring(
             0, tableName.length() - ".csv".length());
       }
-      final CsvTable table;
+      final Table table;
       if (smart) {
         throw new RuntimeException("No smart table. Robert");
       } else {
-        table = new CsvTable(file, null);
+        table = //new CsvTable(file, null);
+        	new StratosphereTable();
       }
       builder.put(tableName, table);
     }

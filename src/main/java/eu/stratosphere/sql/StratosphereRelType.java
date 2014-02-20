@@ -3,12 +3,12 @@ package eu.stratosphere.sql;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
 
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.reltype.RelDataTypeFieldImpl;
 import org.eigenbase.reltype.RelDataTypeImpl;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.type.SqlTypeName;
 
 public class StratosphereRelType extends RelDataTypeImpl {
@@ -20,7 +20,7 @@ public class StratosphereRelType extends RelDataTypeImpl {
 	
 	public StratosphereRelType() {
 		this.digest = "StratosphereSQLRow";
-		typeFactory = new JavaTypeFactoryImpl();
+		typeFactory = new SqlTypeFactoryImpl();
 		fields = getFieldList();
 	}
 	@Override
