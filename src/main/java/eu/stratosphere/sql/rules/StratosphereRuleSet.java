@@ -1,4 +1,4 @@
-package eu.stratosphere.sql;
+package eu.stratosphere.sql.rules;
 
 import java.util.Iterator;
 

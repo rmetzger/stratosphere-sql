@@ -40,6 +40,10 @@ import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableSet;
 
+import eu.stratosphere.sql.rules.DataSourceRule;
+import eu.stratosphere.sql.rules.StratosphereProjectionRule;
+import eu.stratosphere.sql.rules.StratosphereRuleSet;
+
 
 
 public class Launcher  {
@@ -60,7 +64,8 @@ public class Launcher  {
 		Function1<SchemaPlus, Schema> schemaFactory = new FakeItTillYouMakeIt();
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
-			(RelOptRule) DataSourceRule.INSTANCE
+	//		(RelOptRule) DataSourceRule.INSTANCE,
+			(RelOptRule) StratosphereProjectionRule.INSTANCE
 				
 		//	TableAccessRule.INSTANCE,
 		//	RemoveTrivialProjectRule.INSTANCE 
@@ -86,11 +91,11 @@ public class Launcher  {
 		));
 		
 		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
-		String sql = "SELECT a.cnt "
-				+ "FROM (SELECT COUNT(*) AS cnt FROM tbl GROUP BY NAME) AS a, tbl  "
-				+ "WHERE a.cnt = tbl.DEPTNO "
-				+ "ORDER BY a.cnt ASC LIMIT 2";
-		// String sql = "SELECT * FROM tbl";
+//		String sql = "SELECT a.cnt "
+//				+ "FROM (SELECT COUNT(*) AS cnt FROM tbl GROUP BY NAME) AS a, tbl  "
+//				+ "WHERE a.cnt = tbl.DEPTNO "
+//				+ "ORDER BY a.cnt ASC LIMIT 2";
+		String sql = "SELECT * FROM tbl";
 		System.err.println("Sql = "+sql);
 		SqlNode root = planner.parse(sql);
 		SqlNode validated = planner.validate(root);
@@ -102,14 +107,11 @@ public class Launcher  {
 		RelWriter pw = new RelWriterImpl(p,SqlExplainLevel.ALL_ATTRIBUTES, true);
 		rel.explain(pw);
 		
-		// Decorrelate
-		RelDecorrelator = new RelDecorrelator();
-		
 		// set high debugging level for optimizer
-		EigenbaseTrace.getPlannerTracer().setLevel(Level.ALL);
- 	  	ConsoleHandler handler = new ConsoleHandler();
-        handler.setLevel(Level.ALL);
-        EigenbaseTrace.getPlannerTracer().addHandler(handler);
+//		EigenbaseTrace.getPlannerTracer().setLevel(Level.ALL);
+// 	  	ConsoleHandler handler = new ConsoleHandler();
+//        handler.setLevel(Level.ALL);
+//        EigenbaseTrace.getPlannerTracer().addHandler(handler);
 	    
 		// call optimizer? with own rules?
 		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet(), rel);

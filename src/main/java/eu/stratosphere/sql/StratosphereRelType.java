@@ -1,24 +1,14 @@
 package eu.stratosphere.sql;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.management.RuntimeErrorException;
-
 import net.hydromatic.optiq.jdbc.JavaTypeFactoryImpl;
 
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeComparability;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFamily;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.reltype.RelDataTypeFieldImpl;
 import org.eigenbase.reltype.RelDataTypeImpl;
-import org.eigenbase.reltype.RelDataTypePrecedenceList;
-import org.eigenbase.sql.SqlCollation;
-import org.eigenbase.sql.SqlIdentifier;
-import org.eigenbase.sql.SqlIntervalQualifier;
 import org.eigenbase.sql.type.SqlTypeName;
 
 public class StratosphereRelType extends RelDataTypeImpl {

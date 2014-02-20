@@ -23,14 +23,15 @@ import net.hydromatic.optiq.impl.java.AbstractQueryableTable;
 import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 import net.hydromatic.optiq.rules.java.EnumerableConvention;
 import net.hydromatic.optiq.rules.java.JavaRules;
-
 import net.hydromatic.linq4j.*;
 
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.TableAccessRel;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.reltype.*;
 import org.eigenbase.util.Pair;
 
+import eu.stratosphere.sql.relOpt.StratosphereDataSource;
 import au.com.bytecode.opencsv.CSVReader;
 
 import java.io.*;
@@ -97,11 +98,13 @@ public class CsvTable extends AbstractQueryableTable
   public RelNode toRel(
       RelOptTable.ToRelContext context,
       RelOptTable relOptTable) {
-    return new JavaRules.EnumerableTableAccessRel(
-        context.getCluster(),
-        context.getCluster().traitSetOf(EnumerableConvention.INSTANCE),
-        relOptTable,
-        (Class) getElementType());
+	  return new StratosphereDataSource(context.getCluster(), relOptTable);
+	// return new TableAccessRel(context.getCluster(), relOptTable);
+//    return new JavaRules.EnumerableTableAccessRel(
+//        context.getCluster(),
+//        context.getCluster().traitSetOf(EnumerableConvention.INSTANCE),
+//        relOptTable,
+//        (Class) getElementType());
   }
 
   /** Deduces the names and types of a table's columns by reading the first line
