@@ -1,10 +1,17 @@
 package eu.stratosphere.sql.optimizer;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.junit.Assert;
 import org.junit.Test;
 
 import eu.stratosphere.api.common.Plan;
+import eu.stratosphere.api.common.operators.GenericDataSink;
+import eu.stratosphere.api.common.operators.Operator;
+import eu.stratosphere.api.common.operators.SingleInputOperator;
 import eu.stratosphere.sql.Launcher;
+import eu.stratosphere.sql.relOpt.StratosphereSqlFilter.StratosphereSqlFilterMapOperator;
 
 /**
  * Test if Optiq is able to parse
