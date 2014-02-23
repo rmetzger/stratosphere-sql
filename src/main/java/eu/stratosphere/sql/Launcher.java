@@ -1,42 +1,21 @@
 package eu.stratosphere.sql;
 
 import java.io.PrintWriter;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Level;
 
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.ConnectionConfig.Lex;
-import net.hydromatic.optiq.rules.java.JavaRules;
-import net.hydromatic.optiq.rules.java.JavaRules.EnumerableLimitRel;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.RelWriterImpl;
-import org.eigenbase.rel.rules.MergeProjectRule;
-import org.eigenbase.rel.rules.PushFilterPastJoinRule;
-import org.eigenbase.rel.rules.PushFilterPastProjectRule;
-import org.eigenbase.rel.rules.PushJoinThroughJoinRule;
-import org.eigenbase.rel.rules.PushSortPastProjectRule;
-import org.eigenbase.rel.rules.ReduceAggregatesRule;
-import org.eigenbase.rel.rules.RemoveDistinctAggregateRule;
-import org.eigenbase.rel.rules.RemoveDistinctRule;
-import org.eigenbase.rel.rules.RemoveSortRule;
-import org.eigenbase.rel.rules.RemoveTrivialCalcRule;
-import org.eigenbase.rel.rules.RemoveTrivialProjectRule;
-import org.eigenbase.rel.rules.SwapJoinRule;
-import org.eigenbase.rel.rules.TableAccessRule;
-import org.eigenbase.rel.rules.UnionToDistinctRule;
 import org.eigenbase.relopt.RelOptRule;
-import org.eigenbase.relopt.volcano.AbstractConverter.ExpandConversionRule;
 import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
-import org.eigenbase.sql2rel.RelDecorrelator;
-import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -47,11 +26,11 @@ import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
-import eu.stratosphere.sql.rules.DataSourceRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.StringValue;
+import eu.stratosphere.types.Value;
 
 
 
@@ -104,7 +83,7 @@ public class Launcher  {
 //				+ "FROM (SELECT COUNT(*) AS cnt FROM tbl GROUP BY NAME) AS a, tbl  "
 //				+ "WHERE a.cnt = tbl.DEPTNO "
 //				+ "ORDER BY a.cnt ASC LIMIT 2";
-		String sql = "SELECT * FROM tbl";
+		String sql = "SELECT customerName, customerId, customerId, customerId FROM tbl";
 		System.err.println("Sql = "+sql);
 		SqlNode root = planner.parse(sql);
 		SqlNode validated = planner.validate(root);
@@ -128,10 +107,13 @@ public class Launcher  {
 		System.err.println("Optimizer "+ convertedRelNode);
 		convertedRelNode.explain(pw);
 		if(convertedRelNode instanceof StratosphereSqlProjection) {
-			Operator stratoRoot = ((StratosphereSqlProjection) convertedRelNode).getStratosphereOperator();
-			System.err.println("Strato Root Op "+ stratoRoot);
+			StratosphereSqlProjection stratoProj = ((StratosphereSqlProjection) convertedRelNode);
 			
-			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", IntValue.class, StringValue.class), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.out", stratoRoot, "Sql Result");
+			Operator stratoRoot = stratoProj.getStratosphereOperator();
+			System.err.println("Strato Root Op "+ stratoRoot);
+			Class<? extends Value>[] fields = stratoProj.getFields();
+			
+			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.out", stratoRoot, "Sql Result");
 			Plan plan = new Plan(out, "Stratosphere SQL: "+sql);
 			
 			LocalExecutor.execute(plan);
@@ -140,17 +122,4 @@ public class Launcher  {
 //		Launcher l = new Launcher();
 	}
 	
-	
-	private static void printLogo() {
-		// gen by http://bigtext.org/
-		System.out.println(
-			"o-o    o           o               o                     o-o   o-o  o    \n"+
-			"|      |           |               |                    |     o   o |    \n"+
-			" o-o  -o- o-o  oo -o- o-o o-o o-o  O--o o-o o-o o-o      o-o  |   | |    \n"+
-			"    |  |  |   | |  |  | |  \\  |  | |  | |-' |   |-'         | o   O |    \n"+
-			"o--o   o  o   o-o- o  o-o o-o O-o  o  o o-o o   o-o     o--o   o-O\\ O---o\n"+
-			"                              |                                          \n"+
-			"                              o                                          \n"
-		);
-	}
 }
