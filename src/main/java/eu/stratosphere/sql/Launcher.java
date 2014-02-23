@@ -40,9 +40,18 @@ import org.eigenbase.trace.EigenbaseTrace;
 
 import com.google.common.collect.ImmutableSet;
 
+import eu.stratosphere.api.common.Plan;
+import eu.stratosphere.api.common.operators.FileDataSink;
+import eu.stratosphere.api.common.operators.Operator;
+import eu.stratosphere.api.java.record.io.CsvOutputFormat;
+import eu.stratosphere.client.LocalExecutor;
+import eu.stratosphere.sql.relOpt.StratosphereRel;
+import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 import eu.stratosphere.sql.rules.DataSourceRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
+import eu.stratosphere.types.IntValue;
+import eu.stratosphere.types.StringValue;
 
 
 
@@ -114,8 +123,19 @@ public class Launcher  {
 //        EigenbaseTrace.getPlannerTracer().addHandler(handler);
 	    
 		// call optimizer? with own rules?
-		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet(), rel);
+		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet().plus(StratosphereRel.CONVENTION), rel);
 		
+		System.err.println("Optimizer "+ convertedRelNode);
+		convertedRelNode.explain(pw);
+		if(convertedRelNode instanceof StratosphereSqlProjection) {
+			Operator stratoRoot = ((StratosphereSqlProjection) convertedRelNode).getStratosphereOperator();
+			System.err.println("Strato Root Op "+ stratoRoot);
+			
+			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", IntValue.class, StringValue.class), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.out", stratoRoot, "Sql Result");
+			Plan plan = new Plan(out, "Stratosphere SQL: "+sql);
+			
+			LocalExecutor.execute(plan);
+		}
 //		printLogo();
 //		Launcher l = new Launcher();
 	}

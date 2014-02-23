@@ -1,11 +1,18 @@
 package eu.stratosphere.sql;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptTable.ToRelContext;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.reltype.RelDataTypeFactory.FieldInfo;
 import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Pair;
 
 import eu.stratosphere.sql.relOpt.StratosphereDataSource;
 import net.hydromatic.optiq.Schema.TableType;
@@ -20,7 +27,13 @@ public class StratosphereTable implements TranslatableTable {
 	@Override
 	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 		if(rowType == null) {
-			rowType = typeFactory.createSqlType(SqlTypeName.ROW);
+			List<Map.Entry<String, RelDataType>> fieldList = new ArrayList<Map.Entry<String, RelDataType>>();
+			Map.Entry<String, RelDataType> first = Pair.of("customerId", typeFactory.createSqlType(SqlTypeName.INTEGER));
+			Map.Entry<String, RelDataType> second = Pair.of("customerName", typeFactory.createSqlType(SqlTypeName.VARCHAR));
+			fieldList.add(first);
+			fieldList.add(second);
+			rowType = typeFactory.createStructType(fieldList);
+					//typeFactory.createSqlType(SqlTypeName.ROW);
 		}
 		return this.rowType;
 	}

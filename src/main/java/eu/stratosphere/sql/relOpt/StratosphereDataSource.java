@@ -5,6 +5,12 @@ import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptTable;
 
+import eu.stratosphere.api.common.operators.FileDataSource;
+import eu.stratosphere.api.common.operators.Operator;
+import eu.stratosphere.api.java.record.io.CsvInputFormat;
+import eu.stratosphere.types.IntValue;
+import eu.stratosphere.types.StringValue;
+
 public class StratosphereDataSource  extends TableAccessRelBase implements StratosphereRel {
 
 	public StratosphereDataSource(
@@ -12,7 +18,7 @@ public class StratosphereDataSource  extends TableAccessRelBase implements Strat
 		      RelOptTable table) {
 		    super(
 		        cluster,
-		        cluster.traitSetOf(Convention.NONE),
+		        cluster.traitSetOf(StratosphereRel.CONVENTION),
 		        table);
 		  }
 
@@ -22,8 +28,9 @@ public class StratosphereDataSource  extends TableAccessRelBase implements Strat
 	} */
 
 	@Override
-	public void getStratosphereOperator() {
-		
+	public Operator getStratosphereOperator() {
+		FileDataSource src = new FileDataSource(new CsvInputFormat(IntValue.class, StringValue.class), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.csv");
+		return src;
 	}
 	
 }

@@ -11,6 +11,8 @@ import org.eigenbase.relopt.RelOptRuleCall;
 import org.eigenbase.relopt.RelTrait;
 import org.eigenbase.relopt.RelTraitSet;
 
+import eu.stratosphere.sql.relOpt.StratosphereDataSource;
+import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 
 
@@ -50,7 +52,7 @@ public class StratosphereProjectionRule extends ConverterRule {
 	public RelNode convert(RelNode rel) {
 		System.err.println("Jaja");
 		final ProjectRel project = (ProjectRel) rel;
-		final RelTraitSet traits = project.getTraitSet();
+		final RelTraitSet traits = project.getTraitSet().plus(StratosphereRel.CONVENTION);
 		return new StratosphereSqlProjection(project.getCluster(), traits, project.getChild(), project.getProjects(), project.getRowType(), 0);
 	}
 
