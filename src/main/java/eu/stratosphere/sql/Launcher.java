@@ -8,6 +8,8 @@ import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.jdbc.ConnectionConfig.Lex;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
+import net.hydromatic.optiq.tools.RelConversionException;
+import net.hydromatic.optiq.tools.ValidationException;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
@@ -16,6 +18,7 @@ import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
+import org.eigenbase.sql.parser.SqlParseException;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -26,10 +29,9 @@ import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
+import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
-import eu.stratosphere.types.IntValue;
-import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
 
 
@@ -47,43 +49,17 @@ public class Launcher  {
 		
 	}
 	
-	public static void main(String[] args) throws Exception {
-		
+	public static Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
 		Function1<SchemaPlus, Schema> schemaFactory = new FakeItTillYouMakeIt();
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
-	//		(RelOptRule) DataSourceRule.INSTANCE,
-			(RelOptRule) StratosphereProjectionRule.INSTANCE
-				
-		//	TableAccessRule.INSTANCE,
-		//	RemoveTrivialProjectRule.INSTANCE 
-//			
-//			 ExpandConversionRule.INSTANCE,
-//		      SwapJoinRule.INSTANCE,
-//		      RemoveDistinctRule.INSTANCE,
-//		      UnionToDistinctRule.INSTANCE,
-//		      RemoveTrivialProjectRule.INSTANCE,
-//		      RemoveTrivialCalcRule.INSTANCE,
-//		      RemoveSortRule.INSTANCE,
-//		
-//		      TableAccessRule.INSTANCE, //
-//		      MergeProjectRule.INSTANCE, //
-//		      PushFilterPastProjectRule.INSTANCE, //
-//		      PushFilterPastJoinRule.FILTER_ON_JOIN, //
-//		      RemoveDistinctAggregateRule.INSTANCE, //
-//		      ReduceAggregatesRule.INSTANCE, //
-//		      SwapJoinRule.INSTANCE, //
-//		      PushJoinThroughJoinRule.RIGHT, //
-//		      PushJoinThroughJoinRule.LEFT, //
-//		      PushSortPastProjectRule.INSTANCE //
+			(RelOptRule) StratosphereProjectionRule.INSTANCE,
+			StratosphereFilterRule.INSTANCE
 		));
 		
 		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
-//		String sql = "SELECT a.cnt "
-//				+ "FROM (SELECT COUNT(*) AS cnt FROM tbl GROUP BY NAME) AS a, tbl  "
-//				+ "WHERE a.cnt = tbl.DEPTNO "
-//				+ "ORDER BY a.cnt ASC LIMIT 2";
-		String sql = "SELECT customerName, customerId, customerId, customerId FROM tbl";
+
+		// 
 		System.err.println("Sql = "+sql);
 		SqlNode root = planner.parse(sql);
 		SqlNode validated = planner.validate(root);
@@ -106,20 +82,27 @@ public class Launcher  {
 		
 		System.err.println("Optimizer "+ convertedRelNode);
 		convertedRelNode.explain(pw);
+		Operator stratoRoot = null;
+		Plan plan = null;
 		if(convertedRelNode instanceof StratosphereSqlProjection) {
 			StratosphereSqlProjection stratoProj = ((StratosphereSqlProjection) convertedRelNode);
 			
-			Operator stratoRoot = stratoProj.getStratosphereOperator();
+			stratoRoot = stratoProj.getStratosphereOperator();
 			System.err.println("Strato Root Op "+ stratoRoot);
 			Class<? extends Value>[] fields = stratoProj.getFields();
-			
 			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.out", stratoRoot, "Sql Result");
-			Plan plan = new Plan(out, "Stratosphere SQL: "+sql);
-			
-			LocalExecutor.execute(plan);
+			plan = new Plan(out, "Stratosphere SQL: "+sql);
 		}
-//		printLogo();
-//		Launcher l = new Launcher();
+		if(plan == null) {
+			throw new RuntimeException("Sql Conversion failed!");
+		}
+		return plan;
+	}
+	
+	public static void main(String[] args) throws Exception {
+		Plan plan = convertSQLToPlan("SELECT customerName, customerId, customerId, customerId "
+				+ "FROM tbl WHERE customerId = 2");
+		LocalExecutor.execute(plan);
 	}
 	
 }
