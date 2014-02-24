@@ -1,5 +1,6 @@
 package eu.stratosphere.sql.relOpt;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.eigenbase.rel.RelNode;
@@ -91,4 +92,38 @@ public class StratosphereRelUtils {
 		}
 		return sb.toString();
 	}
+
+	public static class ExprVar implements Serializable {
+		private static final long serialVersionUID = 1L;
+		public Class<? extends Value> type;
+		public int positionInRecord;
+		public String varName;
+	}
+	
+	public static void getExprVarsFromRexCall(RexNode cond, List<ExprVar> result) {
+		if(cond instanceof RexCall) {
+			RexCall call = (RexCall) cond;
+			for(int i = 0; i < call.getOperands().size(); i++) {
+				getExprVarsFromRexCall(call.getOperands().get(i), result);
+			}
+			return;
+		}
+		// assignable variable
+		if(cond instanceof RexInputRef) {
+			RexInputRef ref = (RexInputRef) cond;
+			for (ExprVar expr : result) {
+				if(expr.varName.equals(ref.getName())) {
+					// variable already created;
+					return;
+				}
+			}
+			ExprVar e = new ExprVar();
+			e.varName = ref.getName();
+			e.positionInRecord = ref.getIndex();
+			e.type = getTypeClass(ref.getType());
+			result.add(e);
+			return;
+		}
+	}
+	
 }

@@ -1,5 +1,8 @@
 package eu.stratosphere.sql.optimizer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
@@ -44,7 +47,7 @@ public class JexlBooleanEvaluationTest {
 	public void doIt() throws SqlParseException, ValidationException, RelConversionException {
 		String sql = "SELECT customerName, customerId, customerId, customerId "
 				+ "FROM tbl "
-				+ "WHERE ( ( customerId = 0 OR customerId = 3 OR customerId=3 ) AND (customerId = 0 AND customerId < 15)) OR (customerId = 16)";
+				+ "WHERE ( (customerName = customerName ) AND ( customerId = 0 OR customerId = 3 OR customerId=3 ) AND (customerId = 0 AND customerId < 15)) OR (customerId = 16)";
 		
 		
 		Function1<SchemaPlus, Schema> schemaFactory = new FakeItTillYouMakeIt();
@@ -71,9 +74,17 @@ public class JexlBooleanEvaluationTest {
 		Expression e = jexl.createExpression(expression);
 		JexlContext context = new MapContext();
 		context.set("$0", 0);
+		context.set("$1", "karlheinz");
 		Boolean res = (Boolean) e.evaluate(context);
 		Assert.assertTrue(res);
 		context.set("$0", 1);
 		Assert.assertFalse( (Boolean) e.evaluate(context));
+		
+		
+		List<StratosphereRelUtils.ExprVar> vars = new ArrayList<StratosphereRelUtils.ExprVar>(); 
+		StratosphereRelUtils.getExprVarsFromRexCall(cond,vars);
+		System.err.println("vars="+vars);
+		
+		
 	}
 }

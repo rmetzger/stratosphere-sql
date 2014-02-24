@@ -1,5 +1,6 @@
 package eu.stratosphere.sql.relOpt;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.jexl2.Expression;
@@ -16,7 +17,9 @@ import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.configuration.Configuration;
+import eu.stratosphere.types.JavaValue;
 import eu.stratosphere.types.Record;
+import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
 
 public class StratosphereSqlFilter  extends FilterRelBase implements StratosphereRel {
@@ -34,6 +37,8 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 	}
 	
 	public static class StratosphereSqlFilterMapOperator extends MapFunction {
+		private static final long serialVersionUID = 1L;
+		
 		private static final JexlEngine jexl = new JexlEngine();
         static {
            jexl.setCache(512);
@@ -44,8 +49,10 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
         private String exprStr;
         private transient Expression expr;
         private transient JexlContext context;
-		public StratosphereSqlFilterMapOperator(String expression) {
+        private List<StratosphereRelUtils.ExprVar> variables;
+		public StratosphereSqlFilterMapOperator(String expression, List<StratosphereRelUtils.ExprVar> vars) {
 			this.exprStr = expression;
+			this.variables = vars;
 		}
 		@Override
 		public void open(Configuration parameters) throws Exception {
@@ -56,7 +63,12 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 
 		@Override
 		public void map(Record record, Collector<Record> out) throws Exception {
-			
+			// set values for expression
+			for(StratosphereRelUtils.ExprVar var : variables) {
+				Value val = record.getField(var.positionInRecord, var.type);
+				context.set(var.varName, ( (JavaValue<?>) val).getValue() );
+			}
+			// evaluate.
 			if((boolean) this.expr.evaluate(context)) {
 				out.collect(record);
 			}
@@ -70,8 +82,10 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 		RexNode cond = getCondition();
 		
 		String jexlExpr = StratosphereRelUtils.convertRexCallToJexlExpr(cond);
+		List<StratosphereRelUtils.ExprVar> vars = new ArrayList<StratosphereRelUtils.ExprVar>(); 
+		StratosphereRelUtils.getExprVarsFromRexCall(cond,vars);
 		
-		Operator filter = MapOperator.builder(new StratosphereSqlFilterMapOperator(jexlExpr) )
+		Operator filter = MapOperator.builder(new StratosphereSqlFilterMapOperator(jexlExpr, vars) )
 									.input(inputOp)
 									.name(condition.toString())
 									.build();
