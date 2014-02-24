@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexCall;
+import org.eigenbase.rex.RexInputRef;
+import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import eu.stratosphere.api.common.operators.Operator;
@@ -46,5 +50,45 @@ public class StratosphereRelUtils {
 			throw new RuntimeException("Multiple inputs not supported at this time");
 		}
 		return inputOp;
+	}
+	
+	public static String convertRexCallToJexlExpr(RexNode c) {
+		StringBuffer sb = new StringBuffer();
+		if(c instanceof RexCall) {
+			RexCall call = (RexCall) c;
+			sb.append("(");
+			for(int i = 0; i < call.getOperands().size(); i++) {
+				sb.append( convertRexCallToJexlExpr(call.getOperands().get(i)));
+				if(i+1 <call.getOperands().size()) {
+					switch(c.getKind()) {
+						case AND:
+							sb.append(" && ");
+							break;
+						case OR:
+							sb.append(" || ");
+							break;
+						case EQUALS:
+							sb.append(" == ");
+							break;
+						case LESS_THAN:
+							sb.append(" < ");
+							break;
+						default:
+							throw new RuntimeException("Unknown kind "+c.getKind());
+					}
+				}
+			}
+			sb.append(")");
+		}
+		// assignable variable
+		if(c instanceof RexInputRef) {
+			RexInputRef ref = (RexInputRef) c;
+			return ref.getName();
+		}
+		if(c instanceof RexLiteral) {
+			RexLiteral lit = (RexLiteral) c;
+			return lit.getValue().toString();
+		}
+		return sb.toString();
 	}
 }

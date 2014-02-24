@@ -1,7 +1,11 @@
 package eu.stratosphere.sql.optimizer;
 
-import java.util.Collection;
-
+import net.hydromatic.linq4j.function.Function1;
+import net.hydromatic.optiq.Schema;
+import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.jdbc.ConnectionConfig.Lex;
+import net.hydromatic.optiq.tools.Frameworks;
+import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
 import net.hydromatic.optiq.tools.ValidationException;
 
@@ -9,21 +13,23 @@ import org.apache.commons.jexl2.Expression;
 import org.apache.commons.jexl2.JexlContext;
 import org.apache.commons.jexl2.JexlEngine;
 import org.apache.commons.jexl2.MapContext;
-import org.eigenbase.rex.RexCall;
-import org.eigenbase.rex.RexInputRef;
-import org.eigenbase.rex.RexLiteral;
+import org.eigenbase.rel.FilterRel;
+import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.sql.SqlNode;
+import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.operators.GenericDataSink;
-import eu.stratosphere.api.common.operators.SingleInputOperator;
-import eu.stratosphere.api.common.operators.util.UserCodeObjectWrapper;
-import eu.stratosphere.api.java.record.operators.MapOperator;
-import eu.stratosphere.sql.Launcher;
-import eu.stratosphere.sql.relOpt.StratosphereSqlFilter.StratosphereSqlFilterMapOperator;
+import com.google.common.collect.ImmutableSet;
+
+import eu.stratosphere.sql.FakeItTillYouMakeIt;
+import eu.stratosphere.sql.relOpt.StratosphereRelUtils;
+import eu.stratosphere.sql.rules.StratosphereFilterRule;
+import eu.stratosphere.sql.rules.StratosphereProjectionRule;
+import eu.stratosphere.sql.rules.StratosphereRuleSet;
 
 public class JexlBooleanEvaluationTest {
 	private static final JexlEngine jexl = new JexlEngine();
@@ -33,59 +39,34 @@ public class JexlBooleanEvaluationTest {
 		jexl.setSilent(false);
 	}
 	
-	public static String convertRexCallToJexlExpr(RexNode c) {
-		StringBuffer sb = new StringBuffer();
-		if(c instanceof RexCall) {
-			RexCall call = (RexCall) c;
-			sb.append("(");
-			for(int i = 0; i < call.getOperands().size(); i++) {
-				sb.append( convertRexCallToJexlExpr(call.getOperands().get(i)));
-				if(i+1 <call.getOperands().size()) {
-					switch(c.getKind()) {
-						case AND:
-							sb.append(" && ");
-							break;
-						case OR:
-							sb.append(" || ");
-							break;
-						case EQUALS:
-							sb.append(" == ");
-							break;
-						case LESS_THAN:
-							sb.append(" < ");
-							break;
-						default:
-							throw new RuntimeException("Unknown kind "+c.getKind());
-					}
-				}
-			}
-			sb.append(")");
-		}
-		// assignable variable
-		if(c instanceof RexInputRef) {
-			RexInputRef ref = (RexInputRef) c;
-			return ref.getName();
-		}
-		if(c instanceof RexLiteral) {
-			RexLiteral lit = (RexLiteral) c;
-			return lit.getValue().toString();
-		}
-		return sb.toString();
-	}
 	
 	@Test
 	public void doIt() throws SqlParseException, ValidationException, RelConversionException {
-		Plan p = Launcher.convertSQLToPlan("SELECT customerName, customerId, customerId, customerId "
+		String sql = "SELECT customerName, customerId, customerId, customerId "
 				+ "FROM tbl "
-				+ "WHERE ( ( customerId = 0 OR customerId = 3 OR customerId=3 ) AND (customerId = 0 AND customerId < 15)) OR (customerId = 16)");
-		Collection<GenericDataSink> sinks = p.getDataSinks();
-		GenericDataSink sink = sinks.iterator().next();
-		SingleInputOperator sqlProjection = (SingleInputOperator) sink.getInputs().get(0);
-		StratosphereSqlFilterMapOperator sqlFilter = (StratosphereSqlFilterMapOperator) ((UserCodeObjectWrapper)( (MapOperator) sqlProjection.getInputs().get(0)).getUserCodeWrapper() ).getInitialUserCodeObject();
+				+ "WHERE ( ( customerId = 0 OR customerId = 3 OR customerId=3 ) AND (customerId = 0 AND customerId < 15)) OR (customerId = 16)";
 		
-		RexNode cond = sqlFilter.getCondition();
+		
+		Function1<SchemaPlus, Schema> schemaFactory = new FakeItTillYouMakeIt();
+		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
+		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
+			(RelOptRule) StratosphereProjectionRule.INSTANCE,
+			StratosphereFilterRule.INSTANCE
+		));
+		
+		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
 
-		String expression = convertRexCallToJexlExpr(cond);
+		// 
+		System.err.println("Sql = "+sql);
+		SqlNode root = planner.parse(sql);
+		SqlNode validated = planner.validate(root);
+		RelNode rel = planner.convert(validated);
+		
+		FilterRel a = (FilterRel) rel.getInput(0);
+		
+		RexNode cond = a.getCondition();
+
+		String expression = StratosphereRelUtils.convertRexCallToJexlExpr(cond);
 		System.err.println("Expression '"+expression+"' from cond '"+cond+"'");
 		Expression e = jexl.createExpression(expression);
 		JexlContext context = new MapContext();
