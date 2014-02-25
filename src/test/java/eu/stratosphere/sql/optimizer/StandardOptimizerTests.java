@@ -27,7 +27,8 @@ public class StandardOptimizerTests {
 	private static String[] queries = {
 		"SELECT * FROM tbl",
 		"SELECT customerName, customerId, customerId, customerId FROM tbl",
-		"SELECT customerName, customerId, customerId, customerId FROM tbl WHERE customerId = 2"
+		"SELECT customerName, customerId, customerId, customerId FROM tbl WHERE customerId = 2",
+		"SELECT customerId FROM tbl WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)"
 	};
 	
 	@Test
