@@ -17,16 +17,16 @@ You need to check out this branch of Stratosphere to use the SQL interface https
 
 
 Development Roadmap
-[x] understand optiq
-[ ] implement a VERY simple way to create table definitions. I think json based.
-[ ] implement all standard SQL operators, but only for ints and some operations.
-[ ] implement support for more types
-[ ] avro input table support with schema extraction
-[ ] cstore support (paquet)
-[ ] code gen for operators (filters)
+- [x] understand optiq
+- [ ] implement a VERY simple way to create table definitions. I think json based.
+- [ ] implement all standard SQL operators, but only for ints and some operations.
+- [ ] implement support for more types
+- [ ] avro input table support with schema extraction
+- [ ] cstore support (paquet)
+- [ ] code gen for operators (filters)
 
-Goals
-[ ] performance better than Hive
-[ ] support all queries from https://amplab.cs.berkeley.edu/benchmark/
-[ ] support most TPC-H queries?
+Initial Goals
+- [ ] performance better than Hive
+- [ ] support all queries from https://amplab.cs.berkeley.edu/benchmark/
+- [ ] support most TPC-H queries?
 
