@@ -66,7 +66,7 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 			// set values for expression
 			for(StratosphereRelUtils.ExprVar var : variables) {
 				Value val = record.getField(var.positionInRecord, var.type);
-				context.set(var.varName, ( (JavaValue<?>) val).getValue() );
+				context.set(var.varName, ( (JavaValue<?>) val).getObjectValue() );
 			}
 			// evaluate.
 			if((boolean) this.expr.evaluate(context)) {
