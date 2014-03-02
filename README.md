@@ -1,54 +1,32 @@
-stratosphere-sql: Playground.
+stratosphere-sql: Work in Progress
 ================
 
-Area 51: Secret project.
+This repository contains work in progress for the new Stratosphere SQL interface. 
 
-```
-./sqlline
-!connect jdbc:optiq:model=src/test/resources/model.json admin admin
-```
+The code here will eventually end up in this repository: https://github.com/stratosphere/stratosphere-sql
 
-
-## Questions 
- * TableFactory and Schema Factory are the only entry points?
- * It seems that TableFactory depends on linq4j (Queryable)
- * 
-
-## Mail
-
-**Using Optiq as an SQL parser/optimizer for Stratosphere**
-
-Hello,
-
-I'm new to optiq, evaluating it for Stratosphere (stratosphere.eu) which is a general purpose "big data" processing engine.
-The engine supports operators such as map, reduce, join, cross, union etc. and it is able to represent plans as data flow graphs. We also have an optimizer (that decides on join strategy, data shipping etc.).
-
-We would like to use Optiq to do the JDBC interface, SQL parsing and query rewriting.
-
-The goal will be to have (at least) three ways to run SQL queries on Stratosphere:
-
-1) JDBC Connector: This allows to connect the query processor to a wide variety of analytic tools.
-2) Command-line: Run queries from the command line.
-3) Stratosphere data flow integration: Use SQL queries as data source to dataflows, intermediate processing steps, and sink.
-
-I think goal 1) and 2) are the same since the "sqlline" tool is just an interface for JDBC.
-Goal 3) would require to convert a SQL query (as a string) into a set of Stratosphere operators. We do not want to achive goal 3) immediately .. we just keep it in mind during the planning
-
-My questions:
-1) How would you recommend to implement this using Optiq?
-	a) Generate a logically optimized query plan using optiq and translate it into a Stratosphere plan?
-	b) plug ourselves deeper into optiq so that it generates a Stratosphere plan for us?
-	?
-2) Can you point us to the classes we have to look into and where exactly to start?
-
-We would like to reuse the current infrastructure within optiq that maintains the data catalogue, so that we can fully concentrate on the plan generation.
-
-My first goal with optiq is to get a very simple example (SELECT * FROM tbl) running to see how everything works together. It seems that all examples (csv, mongodb) only implement the basic table access but the execution itself is done in-memory by linq4j.
-
-Thank you very much in advance!
+I will move the code to the "stratosphere" repository once the work here stabilized and became a community effort.
 
 
-Thanks,
-Robert
+Please open issues if you want to help with the development!
 
+I'm happy about any help, but beware that this is work in progress! I'll quickly change stuff and this implementation does not reflect how we want to implement the SQL interface in the end!
+
+
+You need to check out this branch of Stratosphere to use the SQL interface https://github.com/rmetzger/stratosphere/tree/sql_mainline_changes 
+
+
+Development Roadmap
+[x] understand optiq
+[ ] implement a VERY simple way to create table definitions. I think json based.
+[ ] implement all standard SQL operators, but only for ints and some operations.
+[ ] implement support for more types
+[ ] avro input table support with schema extraction
+[ ] cstore support (paquet)
+[ ] code gen for operators (filters)
+
+Goals
+[ ] performance better than Hive
+[ ] support all queries from https://amplab.cs.berkeley.edu/benchmark/
+[ ] support most TPC-H queries?
 

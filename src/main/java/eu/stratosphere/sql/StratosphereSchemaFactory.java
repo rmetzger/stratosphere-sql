@@ -9,7 +9,7 @@ import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 
-public class FakeItTillYouMakeIt implements Function1<SchemaPlus, Schema> {
+public class StratosphereSchemaFactory implements Function1<SchemaPlus, Schema> {
 
 	@Override
 	public Schema apply(SchemaPlus incoming) {

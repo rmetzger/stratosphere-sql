@@ -50,7 +50,7 @@ public class Launcher  {
 	}
 	
 	public static Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
-		Function1<SchemaPlus, Schema> schemaFactory = new FakeItTillYouMakeIt();
+		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory();
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
 			(RelOptRule) StratosphereProjectionRule.INSTANCE,

@@ -28,7 +28,7 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-import eu.stratosphere.sql.FakeItTillYouMakeIt;
+import eu.stratosphere.sql.StratosphereSchemaFactory;
 import eu.stratosphere.sql.relOpt.StratosphereRelUtils;
 import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
@@ -50,7 +50,7 @@ public class JexlBooleanEvaluationTest {
 				+ "WHERE ( (customerName = customerName ) AND ( customerId = 0 OR customerId = 3 OR customerId=3 ) AND (customerId = 0 AND customerId < 15)) OR (customerId = 16)";
 		
 		
-		Function1<SchemaPlus, Schema> schemaFactory = new FakeItTillYouMakeIt();
+		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory();
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
 			(RelOptRule) StratosphereProjectionRule.INSTANCE,
