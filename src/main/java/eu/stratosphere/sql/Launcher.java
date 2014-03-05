@@ -30,6 +30,7 @@ import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 import eu.stratosphere.sql.rules.StratosphereFilterRule;
+import eu.stratosphere.sql.rules.StratosphereJoinRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
 import eu.stratosphere.types.Value;
@@ -54,7 +55,8 @@ public class Launcher  {
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
 			(RelOptRule) StratosphereProjectionRule.INSTANCE,
-			StratosphereFilterRule.INSTANCE
+			StratosphereFilterRule.INSTANCE,
+			StratosphereJoinRule.INSTANCE
 		));
 		
 		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
@@ -100,8 +102,8 @@ public class Launcher  {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		Plan plan = convertSQLToPlan("SELECT customerName, customerId, customerId, customerId "
-				+ "FROM tbl WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)");
+		Plan plan = convertSQLToPlan("SELECT a.customerName, a.customerId, b.customerId "
+				+ "FROM tbl a, tbl b WHERE (a.customerId = b.customerId) AND (a.customerId < 15)");
 		LocalExecutor.execute(plan);
 	}
 	
