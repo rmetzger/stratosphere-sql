@@ -23,16 +23,22 @@ import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
 import net.hydromatic.optiq.TranslatableTable;
 
-import javax.json.Json;
-import javax.json.stream.JsonParser;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.JsonToken;
 
 
 public class StratosphereTable implements TranslatableTable {
 
 	private RelDataType rowType;
-	private String primaryKey;
-	private String filePath;
-	private String columnDelimiter;
+	public String primaryKey;
+	public String filePath;
+	public String columnDelimiter;
+	public String rowDelimiter;
+	
+	private static ObjectMapper mapper = new ObjectMapper();
+	private static JsonFactory factory = mapper.getJsonFactory();
 
 	@Override
 	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
@@ -58,15 +64,16 @@ public class StratosphereTable implements TranslatableTable {
 		    	file = new File ("/home/camelia2/stratosphere_sql/stratosphere-sql-1/simple.json");
 		    	reader = new FileReader(file);
 		    	System.err.println("json file found");
-		    	parser = Json.createParser(reader);  
+		    	parser = factory.createJsonParser(reader);;  
 		    	System.err.println("create parser ok");
-			    while (parser.hasNext()) {
-			      JsonParser.Event event = parser.next();
-			      if (event == JsonParser.Event.KEY_NAME) {
-			        switch (parser.getString()) {
-			                 case "fields":
-			                	JsonParser.Event event2 = parser.next();
-			                    System.err.println("fields: " + event.toString());
+		    	JsonToken token = null;
+			    while ((token = parser.nextToken()) != null) {
+			    	System.err.println("token: " + token.toString()+ " " + parser.getText());
+			      
+			    	if (token == JsonToken.FIELD_NAME) {
+				        if(parser.getText().equals("fields")) {			                
+			                	JsonToken token2 = parser.nextToken();
+			                    
 			                    /* event2 helps in iterating in the fields array
 			                     * 
 			                     * event2: START_ARRAY            --> the start of the array
@@ -83,61 +90,64 @@ public class StratosphereTable implements TranslatableTable {
 			                     */
 			                    String fieldName;
 			                    String fieldType;
-			                    event2 = parser.next();   
-			                    while(event2 != JsonParser.Event.END_ARRAY){
+			                    token2 = parser.nextToken();   
+			                    while(token2 != JsonToken.END_ARRAY){
 			                    	 fieldName = null;
 			                    	 fieldType = null;
 			                    	 Map.Entry<String, RelDataType> field = null;
-			                    	 event2 = parser.next(); 			                    	 
-			                    	 if((event2 == JsonParser.Event.KEY_NAME) && (parser.getString().toLowerCase().equals("name"))) {
-			                    		 event2 = parser.next();
-			                    		 fieldName = parser.getString();
+			                    	 token2 = parser.nextToken(); 			                    	 
+			                    	 if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("name"))) {
+			                    		 token2 = parser.nextToken(); 
+			                    		 fieldName = parser.getText();
 			                    		 System.err.println("one column: " + fieldName);
 			                    	 }
-			                    	 event2 = parser.next(); 	
-			                    	 if((event2 == JsonParser.Event.KEY_NAME) && (parser.getString().toLowerCase().equals("type"))) {
-			                    		 event2 = parser.next();
-			                    		 fieldType = parser.getString();
+			                    	 token2 = parser.nextToken(); 
+			                    	 if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("type"))) {
+			                    		 token2 = parser.nextToken(); 
+			                    		 fieldType = parser.getText();
 			                    		 System.err.println(" of type: " + fieldType);
-			                    		 switch (fieldType){
-			                    		 	case "int":
+			                    		 switch (fieldType.toUpperCase()){
+			                    		 	case "INTEGER":
 			                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.INTEGER));
 			                    		 		break;
-			                    		 	case "string":
+			                    		 	case "VARCHAR":
 			                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.VARCHAR));
+			                    		 		break;
+			                    		 	case "CHAR":
+			                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.CHAR));
 			                    		 		break;
 			                    		 }
 			                    		 fieldList.add(field);
 			                    	 }			                    	 
-			                    	 event2 = parser.next(); 	
-			                    	 event2 = parser.next(); 	
-			                    	 
+			                    	 token2 = parser.nextToken(); 
+			                    	 token2 = parser.nextToken(); 			                    	 
 			                    }
 			                    
-			                    break;
-			                 case "primaryKey":
-			                     parser.next();
-			                     primaryKey = parser.getString();
-			                     System.err.println("primaryKey: " + primaryKey);
-			                     
-			                     break;
-			                 case "columnDelimiter":
-			                     parser.next();
-			                     columnDelimiter = parser.getString();
-			                     System.err.println("columnDelimiter: " + columnDelimiter);
-			                     
-			                     break;
-			                 case "filePath":
-			                     parser.next();
-			                     filePath = parser.getString();
-			                     System.err.println("filePath:" + filePath);
-			                     
-			                     break;                	 
-			        }//switch
+				        	}
+				        else if (parser.getText().equals("primaryKey")){
+			                	 token = parser.nextToken();
+			                     primaryKey = parser.getText();
+			                     System.err.println("primaryKey: " + primaryKey);			                     
+				        	}
+				        	else if (parser.getText().equals("columnDelimiter")){
+				                	 token = parser.nextToken();
+				                     columnDelimiter = parser.getText();
+				                     System.err.println("columnDelimiter: " + columnDelimiter);			                     
+				        		}
+				        		else if (parser.getText().equals("rowDelimiter")){
+					                	 token = parser.nextToken();
+					                     rowDelimiter = parser.getText();			                     			                     
+				        			}
+				        			else if (parser.getText().equals("filePath")){
+						                	 token = parser.nextToken();
+						                     filePath = parser.getText();
+						                     System.err.println("filePath:" + filePath);
+				        			}
 			      }
 			      else {
-			    	  System.err.println("event:" + event.toString());
+			    	  System.err.println("token:" + token.toString());
 			      }
+			      
 			      
 			    }//while
 			    

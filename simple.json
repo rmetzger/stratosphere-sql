@@ -2,14 +2,15 @@
   "fields": [
     {
       "name": "customerId",
-      "type": "int"
+      "type": "INTEGER"
     },
     {
       "name": "customerName",
-      "type": "string"
+      "type": "VARCHAR"
     }
   ],
   "primaryKey": "DEPTNO",
   "columnDelimiter": ",",
+  "rowDelimiter": "\\n",
   "filePath": "/home/camelia2/stratosphere_sql/stratosphere-sql-1/simple.csv" 
 }
