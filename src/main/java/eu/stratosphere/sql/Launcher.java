@@ -90,7 +90,7 @@ public class Launcher  {
 			stratoRoot = stratoProj.getStratosphereOperator();
 			System.err.println("Strato Root Op "+ stratoRoot);
 			Class<? extends Value>[] fields = stratoProj.getFields();
-			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.out", stratoRoot, "Sql Result");
+			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file:///home/camelia2/stratosphere_sql/stratosphere-sql-1/simple.out", stratoRoot, "Sql Result");
 			plan = new Plan(out, "Stratosphere SQL: "+sql);
 		}
 		if(plan == null) {

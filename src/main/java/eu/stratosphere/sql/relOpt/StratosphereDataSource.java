@@ -29,7 +29,7 @@ public class StratosphereDataSource  extends TableAccessRelBase implements Strat
 
 	@Override
 	public Operator getStratosphereOperator() {
-		FileDataSource src = new FileDataSource(new CsvInputFormat(IntValue.class, StringValue.class), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.csv");
+		FileDataSource src = new FileDataSource(new CsvInputFormat(IntValue.class, StringValue.class), "file:///home/camelia2/stratosphere_sql/stratosphere-sql-1/simple.csv");
 		return src;
 	}
 	
