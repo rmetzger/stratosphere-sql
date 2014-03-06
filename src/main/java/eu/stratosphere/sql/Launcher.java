@@ -30,6 +30,7 @@ import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 import eu.stratosphere.sql.rules.StratosphereFilterRule;
+import eu.stratosphere.sql.rules.StratosphereJoinRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
 import eu.stratosphere.types.Value;
@@ -54,7 +55,8 @@ public class Launcher  {
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
 			(RelOptRule) StratosphereProjectionRule.INSTANCE,
-			StratosphereFilterRule.INSTANCE
+			StratosphereFilterRule.INSTANCE,
+			StratosphereJoinRule.INSTANCE
 		));
 		
 		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
