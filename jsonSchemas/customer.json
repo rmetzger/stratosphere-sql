@@ -1,0 +1,16 @@
+{
+  "fields": [
+    {
+      "name": "customerId",
+      "type": "INTEGER"
+    },
+    {
+      "name": "customerName",
+      "type": "VARCHAR"
+    }
+  ],
+  "primaryKey": "customerId",
+  "columnDelimiter": ",",
+  "rowDelimiter": "\\n",
+  "filePath": "/home/camelia2/stratosphere_sql/stratosphere-sql-1/simple.csv" 
+}

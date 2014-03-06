@@ -13,17 +13,10 @@ public class StratosphereSchemaFactory implements Function1<SchemaPlus, Schema> 
 
 	@Override
 	public Schema apply(SchemaPlus incoming) {
-	//	CsvTableFactory fac = new CsvTableFactory();
-	//	RelDataType type = new StratosphereRelType();
-	//	Table tbl = fac.create(incoming,"tbl", null, type);
-		// incoming.add("tbl", tbl);
-		Schema schema = new CsvSchema(incoming, "tbl", new File("sales/"), false);
-		
-		Table tbl = new StratosphereTable();
-		incoming.add("tbl", tbl);
+
+		Schema schema = new CsvSchema(incoming, "mySchema", new File("jsonSchemas/"), false);
 		return incoming.add(schema);
-		//return 
-	//	throw new RuntimeException("faked too much");
+
 	}
 
 }
