@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexInputRef;
@@ -12,6 +13,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import eu.stratosphere.api.common.operators.Operator;
+import eu.stratosphere.sql.StratosphereSQLRuntimeException;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
@@ -42,15 +44,24 @@ public class StratosphereRelUtils {
 	public static Operator openSingleInputOperator(List<RelNode> optiqInput) {
 		Operator inputOp = null;
 		if(optiqInput.size() == 1) {
-			RelNode optiqSingleInput = optiqInput.get(0);
-			if(!(optiqSingleInput instanceof StratosphereRel)) {
-				throw new RuntimeException("Input not properly converted to StratosphereRel");
-			}
-			inputOp = ( (StratosphereRel)optiqSingleInput).getStratosphereOperator();
+			final RelNode optiqSingleInput = optiqInput.get(0);
+			final StratosphereRel stratoRel = toStratoRel(optiqSingleInput);
+			inputOp = stratoRel.getStratosphereOperator();
 		} else {
-			throw new RuntimeException("Multiple inputs not supported at this time");
+			throw new StratosphereSQLRuntimeException("Multiple inputs not supported at this time");
 		}
 		return inputOp;
+	}
+	
+	public static StratosphereRel toStratoRel(RelNode input) {
+		if(input instanceof RelSubset) {
+			System.err.println("Had to convert "+input+" to best?");
+			input = ( (RelSubset) input).getBest();
+		}
+		if(!(input instanceof StratosphereRel)) {
+			throw new StratosphereSQLRuntimeException("Input is not a StratosphereRel. It is "+input.getClass().getName());
+		}
+		return (StratosphereRel) input;
 	}
 	
 	public static String convertRexCallToJexlExpr(RexNode c) {

@@ -26,7 +26,6 @@ import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
-import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 import eu.stratosphere.sql.rules.StratosphereFilterRule;
@@ -38,17 +37,6 @@ import eu.stratosphere.types.Value;
 
 
 public class Launcher  {
-
-	public Launcher() {
-//		StratosphereContext ctx = new StratosphereContext();
-//		String sql = "SELECT * FROM DEPTS";
-//		Type elementType = PactRecord.class;
-//		OptiqPrepare.PrepareResult<PactRecord> prepared = new OptiqPrepareImpl()
-//		        .prepareSql(ctx, sql, null, elementType, -1);
-//		DataContext dataContext = new StratosphereContext();
-//		Enumerator<PactRecord> enumerator = prepared.enumerator(dataContext);
-		
-	}
 	
 	public static Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
 		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory();
@@ -61,7 +49,6 @@ public class Launcher  {
 		
 		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
 
-		// 
 		System.err.println("Sql = "+sql);
 		SqlNode root = planner.parse(sql);
 		SqlNode validated = planner.validate(root);
@@ -70,7 +57,7 @@ public class Launcher  {
 		// print out logical tree
 		System.err.println("Got rel = "+rel);
 		PrintWriter p = new PrintWriter(System.out);
-		RelWriter pw = new RelWriterImpl(p,SqlExplainLevel.ALL_ATTRIBUTES, true);
+		RelWriter pw = new RelWriterImpl(p, SqlExplainLevel.ALL_ATTRIBUTES, true);
 		rel.explain(pw);
 		
 		// set high debugging level for optimizer
@@ -79,13 +66,13 @@ public class Launcher  {
 //        handler.setLevel(Level.ALL);
 //        EigenbaseTrace.getPlannerTracer().addHandler(handler);
 	    
-		// call optimizer? with own rules?
 		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet().plus(StratosphereRel.CONVENTION), rel);
 		
 		System.err.println("Optimizer "+ convertedRelNode);
 		convertedRelNode.explain(pw);
 		Operator stratoRoot = null;
 		Plan plan = null;
+		System.err.println("Create Stratosphere Plan: ");
 		if(convertedRelNode instanceof StratosphereSqlProjection) {
 			StratosphereSqlProjection stratoProj = ((StratosphereSqlProjection) convertedRelNode);
 			
@@ -104,7 +91,7 @@ public class Launcher  {
 	public static void main(String[] args) throws Exception {
 		Plan plan = convertSQLToPlan("SELECT a.customerName, a.customerId, b.customerId "
 				+ "FROM tbl a, tbl b WHERE (a.customerId = b.customerId) AND (a.customerId < 15)");
-		LocalExecutor.execute(plan);
+		// LocalExecutor.execute(plan);
 	}
 	
 }

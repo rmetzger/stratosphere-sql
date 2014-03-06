@@ -1,17 +1,10 @@
 package eu.stratosphere.sql.optimizer;
 
-import java.util.Collection;
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Test;
 
 import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.operators.GenericDataSink;
-import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.api.common.operators.SingleInputOperator;
 import eu.stratosphere.sql.Launcher;
-import eu.stratosphere.sql.relOpt.StratosphereSqlFilter.StratosphereSqlFilterMapOperator;
 
 /**
  * Test if Optiq is able to parse
@@ -28,7 +21,8 @@ public class StandardOptimizerTests {
 		"SELECT * FROM tbl",
 		"SELECT customerName, customerId, customerId, customerId FROM tbl",
 		"SELECT customerName, customerId, customerId, customerId FROM tbl WHERE customerId = 2",
-		"SELECT customerId FROM tbl WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)"
+		"SELECT customerId FROM tbl WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)",
+		"SELECT a.customerName, a.customerId, b.customerId FROM tbl a, tbl b WHERE (a.customerId = b.customerId) AND (a.customerId < 15)"
 	};
 	
 	@Test

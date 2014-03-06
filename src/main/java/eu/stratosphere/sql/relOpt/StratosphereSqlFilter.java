@@ -13,6 +13,8 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 
+import com.google.common.base.Preconditions;
+
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.operators.MapOperator;
@@ -23,11 +25,10 @@ import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
 
 public class StratosphereSqlFilter  extends FilterRelBase implements StratosphereRel {
-	private RexNode condition;
 	public StratosphereSqlFilter(RelOptCluster cluster, RelTraitSet traits,
 			RelNode child, RexNode condition) {
 		super(cluster, traits, child, condition);
-		this.condition = condition;
+		Preconditions.checkArgument(getConvention() == CONVENTION);
 	}
 
 	@Override

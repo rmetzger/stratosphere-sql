@@ -24,7 +24,7 @@ public class StratosphereProjectionRule extends ConverterRule {
 	public StratosphereProjectionRule() {
 		 super(ProjectRel.class,
 		          Convention.NONE,
-		          Convention.NONE,
+		          StratosphereRel.CONVENTION,
 		          "StratosphereProjectionRule");
 	}
 

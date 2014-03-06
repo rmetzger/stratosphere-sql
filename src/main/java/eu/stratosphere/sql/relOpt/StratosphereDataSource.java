@@ -4,6 +4,9 @@ import org.eigenbase.rel.TableAccessRelBase;
 import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptTable;
+import org.eigenbase.relopt.RelTraitSet;
+
+import com.google.common.base.Preconditions;
 
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.common.operators.Operator;
@@ -20,12 +23,9 @@ public class StratosphereDataSource  extends TableAccessRelBase implements Strat
 		        cluster,
 		        cluster.traitSetOf(StratosphereRel.CONVENTION),
 		        table);
+		    Preconditions.checkArgument(getConvention() == CONVENTION);
 		  }
 
-/*	protected StratosphereDataSource(RelOptCluster cluster, RelTraitSet traits,
-			RelOptTable table) {
-		super(cluster, traits, table);
-	} */
 
 	@Override
 	public Operator getStratosphereOperator() {

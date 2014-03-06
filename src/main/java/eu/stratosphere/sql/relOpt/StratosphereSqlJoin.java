@@ -9,9 +9,12 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.rex.RexNode;
 
+import com.google.common.base.Preconditions;
+
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.JoinFunction;
 import eu.stratosphere.api.java.record.operators.JoinOperator;
+import eu.stratosphere.sql.StratosphereSQLRuntimeException;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.util.Collector;
@@ -32,6 +35,7 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 			RelNode left, RelNode right, RexNode condition,
 			JoinRelType joinType, Set<String> variablesStopped) {
 		super(cluster, traits, left, right, condition, joinType, variablesStopped);
+		Preconditions.checkArgument(getConvention() == CONVENTION);
 	}
 
 	@Override
@@ -44,9 +48,13 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 
 	@Override
 	public Operator getStratosphereOperator() {
-		
-		Operator leftOperator = null;
-		Operator rightOperator = null;
+		if(getInputs().size() != 2) {
+			throw new StratosphereSQLRuntimeException("The join operator currently supports only join on two inputs");
+		}
+		RelNode leftRel = getInput(0);
+		RelNode rightRel = getInput(1);
+		Operator leftOperator = StratosphereRelUtils.toStratoRel(leftRel).getStratosphereOperator();
+		Operator rightOperator = StratosphereRelUtils.toStratoRel(rightRel).getStratosphereOperator();
 		JoinOperator join = JoinOperator.builder(new StratosphereSqlJoinOperator(), 
 				StringValue.class, 0, 0)
 				.input1(leftOperator)

@@ -15,6 +15,8 @@ import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Pair;
 
+import com.google.common.base.Preconditions;
+
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.operators.MapOperator;
@@ -32,6 +34,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 			RelTraitSet traits, RelNode child, List<RexNode> exps,
 			RelDataType rowType, int flags) {
 		super(cluster, traits, child, exps, rowType, flags);
+		Preconditions.checkArgument(getConvention() == CONVENTION);
 	}
 	
 	@Override
