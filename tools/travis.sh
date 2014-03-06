@@ -3,10 +3,8 @@
 git clone https://github.com/rmetzger/stratosphere.git
 cd stratosphere
 git checkout sql_mainline_changes
-mvn clean install -DskipTests
+mvn -B clean install -DskipTests
 
-cd
+cd ..
 
-cd rmetzger/stratosphere-sql
-
-mvn clean verify
+mvn -B clean verify

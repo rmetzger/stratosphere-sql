@@ -79,11 +79,11 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	public Operator getStratosphereOperator() {
 		// get Input
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
-		List<Map.Entry<Integer, ? extends Class<? extends Value>>> types = new ArrayList<>();
+		List<Map.Entry<Integer, ? extends Class<? extends Value>>> types = new ArrayList<Map.Entry<Integer, ? extends Class<? extends Value>>>();
 		Iterator<RexNode> it = exps.iterator();
 		while(it.hasNext()) {
 			RexInputRef inputRef = (RexInputRef) it.next();
-			Pair<Integer, ? extends Class<? extends Value>> entry = new Pair<>(inputRef.getIndex(), StratosphereRelUtils.getTypeClass(inputRef.getType()));
+			Pair<Integer, ? extends Class<? extends Value>> entry = new Pair(inputRef.getIndex(), StratosphereRelUtils.getTypeClass(inputRef.getType()));
 			types.add(entry);
 		}
 	

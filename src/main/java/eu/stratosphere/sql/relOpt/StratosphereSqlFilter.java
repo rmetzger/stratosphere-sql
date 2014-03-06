@@ -69,7 +69,7 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 				context.set(var.varName, ( (JavaValue<?>) val).getObjectValue() );
 			}
 			// evaluate.
-			if((boolean) this.expr.evaluate(context)) {
+			if((Boolean) this.expr.evaluate(context)) {
 				out.collect(record);
 			}
 		}
