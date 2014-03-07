@@ -56,7 +56,11 @@ public class StratosphereTable implements TranslatableTable {
 
 	@Override
 	public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
-		return new StratosphereDataSource(context.getCluster(), relOptTable);
+		//was before: 
+		//return new StratosphereDataSource(context.getCluster(), relOptTable);
+		String tableName = jsonFileName.substring(jsonFileName.lastIndexOf("/"));
+		return new StratosphereDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
+		
 	} 
 
 }
