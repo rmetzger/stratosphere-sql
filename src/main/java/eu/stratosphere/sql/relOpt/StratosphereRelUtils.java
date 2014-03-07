@@ -54,10 +54,6 @@ public class StratosphereRelUtils {
 	}
 	
 	public static StratosphereRel toStratoRel(RelNode input) {
-		if(input instanceof RelSubset) {
-			System.err.println("Had to convert "+input+" to best?");
-			input = ( (RelSubset) input).getBest();
-		}
 		if(!(input instanceof StratosphereRel)) {
 			throw new StratosphereSQLException("Input is not a StratosphereRel. It is "+input.getClass().getName());
 		}

@@ -29,8 +29,8 @@ import eu.stratosphere.util.Collector;
 
 public class StratosphereSqlJoin extends JoinRelBase implements RelNode, StratosphereRel {
 
-	final List<Integer> leftKeys;
-	final List<Integer> rightKeys;
+	List<Integer> leftKeys;
+	List<Integer> rightKeys;
 	
 	public static class StratosphereSqlJoinOperator extends JoinFunction {
 		private static final long serialVersionUID = 1L;
@@ -46,11 +46,23 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 			RelNode left, RelNode right, RexNode condition,
 			JoinRelType joinType, Set<String> variablesStopped) {
 		super(cluster, traits, left, right, condition, joinType, variablesStopped);
-		if(left instanceof RelSubset) {
-			left = ((RelSubset) left).getBest();
-		}
-		if(right instanceof RelSubset) {
-			right = ((RelSubset) right).getBest();
+		
+		Preconditions.checkArgument(getConvention() == CONVENTION);
+		Preconditions.checkArgument(joinType == JoinRelType.INNER, "Only inner joins are supported at the moment");
+	}
+
+	@Override
+	public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr,
+			RelNode left, RelNode right, JoinRelType joinType) {
+		System.err.println("StratoJoin.copy()");
+		return new StratosphereSqlJoin(getCluster(), traitSet, left, 
+				right, conditionExpr, joinType, getVariablesStopped());
+	}
+
+	@Override
+	public Operator getStratosphereOperator() {
+		if(getInputs().size() != 2) {
+			throw new StratosphereSQLException("The join operator currently supports only join on two inputs");
 		}
 		leftKeys = new ArrayList<Integer>();
 	    rightKeys = new ArrayList<Integer>();
@@ -65,25 +77,7 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 	        throw new StratosphereSQLException(
 	            "StratosphereSqlJoinOperator only supports equi-join");
 	      }
-		Preconditions.checkArgument(getConvention() == CONVENTION);
-		Preconditions.checkArgument(joinType == JoinRelType.INNER, "Only inner joins are supported at the moment");
-		Preconditions.checkArgument( leftKeys.size() == rightKeys.size() );
-		
-	}
-
-	@Override
-	public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr,
-			RelNode left, RelNode right, JoinRelType joinType) {
-		System.err.println("StratoJoin.copy()");
-		return new StratosphereSqlJoin(getCluster(), getTraitSet(), getLeft(), 
-				getRight(), getCondition(), getJoinType(), getVariablesStopped());
-	}
-
-	@Override
-	public Operator getStratosphereOperator() {
-		if(getInputs().size() != 2) {
-			throw new StratosphereSQLException("The join operator currently supports only join on two inputs");
-		}
+	      Preconditions.checkArgument( leftKeys.size() == rightKeys.size() );
 		RelNode leftRel = getInput(0);
 		RelNode rightRel = getInput(1);
 		Operator leftOperator = StratosphereRelUtils.toStratoRel(leftRel).getStratosphereOperator();

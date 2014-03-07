@@ -11,7 +11,11 @@ import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexLocalRef;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexProgram;
+import org.eigenbase.rex.RexProgramBuilder;
 
 import com.google.common.base.Preconditions;
 
@@ -34,7 +38,7 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 	@Override
 	public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
 		System.err.println("StratosphereSqlFilter.copy()");
-		return new StratosphereSqlFilter(getCluster(), getTraitSet(), sole(inputs), getCondition());
+		return new StratosphereSqlFilter(getCluster(), traitSet, sole(inputs), getCondition());
 	}
 	
 	public static class StratosphereSqlFilterMapOperator extends MapFunction {
@@ -81,6 +85,9 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 	public Operator getStratosphereOperator() {
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
 		RexNode cond = getCondition();
+		
+		List<RexLocalRef> projects;
+		RelDataType outputRowType;
 		
 		String jexlExpr = StratosphereRelUtils.convertRexCallToJexlExpr(cond);
 		List<StratosphereRelUtils.ExprVar> vars = new ArrayList<StratosphereRelUtils.ExprVar>(); 

@@ -89,8 +89,14 @@ public class Launcher  {
 	}
 	
 	public static void main(String[] args) throws Exception {
-		Plan plan = convertSQLToPlan("SELECT a.customerName, a.customerId, b.customerId "
-				+ "FROM tbl a, tbl b WHERE (a.customerId = b.customerId) AND (a.customerId < 15)");
+	//	Plan plan = convertSQLToPlan("SELECT a.customerName, a.customerId, b.customerId "
+	//			+ "FROM tbl a, tbl b WHERE (a.customerId = b.customerId) AND (a.customerId < 15)");
+		
+		Plan plan = convertSQLToPlan("SELECT COUNT(*) FROM tbl GROUP BY customerName");
+		
+		//Plan plan = convertSQLToPlan("SELECT SUBSTRING(customerName, 1, 10), SUM(customerId) FROM tbl GROUP BY SUBSTRING(customerName, 1, 10)");
+				
+		
 		// LocalExecutor.execute(plan);
 	}
 	
