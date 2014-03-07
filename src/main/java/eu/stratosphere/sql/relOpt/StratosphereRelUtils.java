@@ -13,7 +13,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.sql.type.SqlTypeName;
 
 import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.sql.StratosphereSQLRuntimeException;
+import eu.stratosphere.sql.StratosphereSQLException;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
@@ -48,7 +48,7 @@ public class StratosphereRelUtils {
 			final StratosphereRel stratoRel = toStratoRel(optiqSingleInput);
 			inputOp = stratoRel.getStratosphereOperator();
 		} else {
-			throw new StratosphereSQLRuntimeException("Multiple inputs not supported at this time");
+			throw new StratosphereSQLException("Multiple inputs not supported at this time");
 		}
 		return inputOp;
 	}
@@ -59,7 +59,7 @@ public class StratosphereRelUtils {
 			input = ( (RelSubset) input).getBest();
 		}
 		if(!(input instanceof StratosphereRel)) {
-			throw new StratosphereSQLRuntimeException("Input is not a StratosphereRel. It is "+input.getClass().getName());
+			throw new StratosphereSQLException("Input is not a StratosphereRel. It is "+input.getClass().getName());
 		}
 		return (StratosphereRel) input;
 	}
