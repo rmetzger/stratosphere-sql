@@ -17,7 +17,7 @@ import org.eigenbase.reltype.RelDataTypeFactory.FieldInfo;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Pair;
 
-import eu.stratosphere.sql.relOpt.StratosphereDataSource;
+import eu.stratosphere.sql.relOpt.CSVStratosphereDataSource;
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
@@ -35,12 +35,7 @@ public class StratosphereTable implements TranslatableTable {
 	
 	
 	@Override
-	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-		
-		/*if(rowType == null) {
-			rowType = parseJSONSchema(typeFactory);
-		}*/
-		
+	public RelDataType getRowType(RelDataTypeFactory typeFactory) {		
 		return this.rowType;
 	}
 
@@ -56,10 +51,16 @@ public class StratosphereTable implements TranslatableTable {
 
 	@Override
 	public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
-		//was before: 
-		//return new StratosphereDataSource(context.getCluster(), relOptTable);
+
 		String tableName = jsonFileName.substring(jsonFileName.lastIndexOf("/"));
-		return new StratosphereDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
+		if(filePath.endsWith(".csv")){
+			return new CSVStratosphereDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
+		}
+		else{
+			//return new StratosphereDataSource(context.getCluster(), relOptTable);
+			System.err.println("file format not yet supported");
+			return null;
+		}
 		
 	} 
 

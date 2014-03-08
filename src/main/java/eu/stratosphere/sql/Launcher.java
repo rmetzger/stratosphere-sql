@@ -102,7 +102,6 @@ public class Launcher  {
 	public static void main(String[] args) throws Exception {
 		Plan plan = convertSQLToPlan("SELECT customerName, customerId, customerId, customerId "
 				+ "FROM customer WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)");
-		//LocalExecutor.optimizerPlanAsJSON(plan);
 		LocalExecutor.execute(plan);
 	}
 	

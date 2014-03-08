@@ -89,7 +89,7 @@ public class CsvSchema extends AbstractSchema {
       String tableName = file.getName();
       if (tableName.endsWith(".json")) {
         tableName = tableName.substring(0, tableName.length() - ".json".length());
-        System.err.println("===================table name= " + tableName + "===========================");
+        System.err.println("TABLE " + tableName.toUpperCase());
         Table table = new StratosphereTable();
         this.parseJSONSchema(table, file);
         builder.put(tableName, table);
@@ -110,12 +110,9 @@ public class CsvSchema extends AbstractSchema {
 	    if (table instanceof StratosphereTable){
 		    try {
 			    	reader = new FileReader(file);
-			    	System.err.println("json file found");
 			    	parser = factory.createJsonParser(reader);
-			    	System.err.println("create parser ok");
 			    	JsonToken token = null;
 				    while ((token = parser.nextToken()) != null) {
-				    	System.err.println("token: " + token.toString()+ " " + parser.getText());
 				      
 				    	if (token == JsonToken.FIELD_NAME) {
 					        if(parser.getText().equals("fields")) {			                
@@ -146,13 +143,13 @@ public class CsvSchema extends AbstractSchema {
 				                    	 if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("name"))) {
 				                    		 token2 = parser.nextToken(); 
 				                    		 fieldName = parser.getText();
-				                    		 System.err.println("one column: " + fieldName);
+				                    		 System.err.print("" + fieldName);
 				                    	 }
 				                    	 token2 = parser.nextToken(); 
 				                    	 if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("type"))) {
 				                    		 token2 = parser.nextToken(); 
 				                    		 fieldType = parser.getText();
-				                    		 System.err.println(" of type: " + fieldType);
+				                    		 System.err.println("	" + fieldType);
 				                    		 switch (fieldType.toUpperCase()){
 				                    		 	case "INTEGER":
 				                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.INTEGER));
@@ -173,13 +170,11 @@ public class CsvSchema extends AbstractSchema {
 					        	}
 					        else if (parser.getText().equals("primaryKey")){
 				                	 token = parser.nextToken();
-				                     ((StratosphereTable)table).primaryKey = parser.getText();
-				                     System.err.println("primaryKey: " + ((StratosphereTable)table).primaryKey);			                     
+				                     ((StratosphereTable)table).primaryKey = parser.getText();		                     
 					        	}
 					        	else if (parser.getText().equals("columnDelimiter")){
 					                	 token = parser.nextToken();
-					                	 ((StratosphereTable)table).columnDelimiter = parser.getText();
-					                     System.err.println("columnDelimiter: " + ((StratosphereTable)table).columnDelimiter);			                     
+					                	 ((StratosphereTable)table).columnDelimiter = parser.getText();	                     
 					        		}
 					        		else if (parser.getText().equals("rowDelimiter")){
 						                	 token = parser.nextToken();
@@ -188,14 +183,9 @@ public class CsvSchema extends AbstractSchema {
 					        			else if (parser.getText().equals("filePath")){
 							                	 token = parser.nextToken();
 							                	 ((StratosphereTable)table).filePath = parser.getText();
-							                     System.err.println("filePath:" + ((StratosphereTable)table).filePath);
 					        			}
 				      }
-				      else {
-				    	  System.err.println("token:" + token.toString());
-				      }
-				      
-				      
+				    	
 				    }//while
 				    
 				    ((StratosphereTable)table).rowType = typeFactory.createStructType(fieldList);
