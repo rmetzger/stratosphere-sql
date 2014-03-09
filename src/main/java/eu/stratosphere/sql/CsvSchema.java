@@ -147,17 +147,32 @@ public class CsvSchema extends AbstractSchema {
 				                    		 token2 = parser.nextToken(); 
 				                    		 fieldType = parser.getText();
 				                    		 System.err.println("	" + fieldType);
-				                    		 switch (fieldType.toUpperCase()){
-				                    		 	case "INTEGER":
+				                    		 if(fieldType.toUpperCase().equals("INTEGER")){	
 				                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.INTEGER));
-				                    		 		break;
-				                    		 	case "VARCHAR":
-				                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.VARCHAR));
-				                    		 		break;
-				                    		 	case "CHAR":
-				                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.CHAR));
-				                    		 		break;
-				                    		 }
+				                    		 } else
+				                    		if(fieldType.toUpperCase().equals("LONG")){	
+					                    		 	field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.BIGINT));
+					                    	} else
+				                    		if(fieldType.toUpperCase().equals("SHORT")){	
+					                    		 	field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.SMALLINT));
+					                    	}  else
+				                    		if(fieldType.toUpperCase().equals("BYTE")){	
+					                    		 	field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.TINYINT));
+					                    	}  else
+				                    		if(fieldType.toUpperCase().equals("FLOAT")){	
+					                    		 	field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.FLOAT));
+					                    	}  else
+				                    		if(fieldType.toUpperCase().equals("DOUBLE")){	
+					                    		 	field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.DOUBLE));
+					                    	}  else
+				                    		if(fieldType.toUpperCase().equals("CHAR")){	
+					                    		 	field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.CHAR));
+					                    	}  else
+				                    		if(fieldType.toUpperCase().equals("VARCHAR")){	
+					                    		 	field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.VARCHAR));
+					                    	}  
+				                    		 
+				                    		 
 				                    		 fieldList.add(field);
 				                    	 }			                    	 
 				                    	 token2 = parser.nextToken(); 

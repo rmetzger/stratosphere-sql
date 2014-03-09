@@ -10,7 +10,13 @@ import org.eigenbase.reltype.RelDataTypeField;
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.io.CsvInputFormat;
+import eu.stratosphere.types.ByteValue;
+import eu.stratosphere.types.CharValue;
+import eu.stratosphere.types.DoubleValue;
+import eu.stratosphere.types.FloatValue;
 import eu.stratosphere.types.IntValue;
+import eu.stratosphere.types.LongValue;
+import eu.stratosphere.types.ShortValue;
 import eu.stratosphere.types.StringValue;
 
 public class CSVStratosphereDataSource extends StratosphereDataSource {
@@ -57,12 +63,29 @@ public class CSVStratosphereDataSource extends StratosphereDataSource {
 			
 			if(field.getType().toString().equals("INTEGER")) {
 				CsvInputFormat.configureRecordFormat(src).field(IntValue.class, position);
-				System.err.println("INT FIELD " + field.getName()+ " of type:" + field.getType() + " position:" + position);
+			}
+			else if(field.getType().toString().equals("BIGINT")) {
+				CsvInputFormat.configureRecordFormat(src).field(LongValue.class, position);
+			}
+			else if(field.getType().toString().equals("SMALLINT")) {
+				CsvInputFormat.configureRecordFormat(src).field(ShortValue.class, position);
+			}
+			else if(field.getType().toString().equals("TINYINT")) {
+				CsvInputFormat.configureRecordFormat(src).field(ByteValue.class, position);
+			}
+			else if(field.getType().toString().equals("FLOAT")) {
+				CsvInputFormat.configureRecordFormat(src).field(FloatValue.class, position);
+			}
+			else if(field.getType().toString().equals("DOUBLE")) {
+				CsvInputFormat.configureRecordFormat(src).field(DoubleValue.class, position);
+			}
+			else if(field.getType().toString().startsWith("CHAR")) {
+				CsvInputFormat.configureRecordFormat(src).field(CharValue.class, position);
 			}
 			else if(field.getType().toString().startsWith("VARCHAR")) {
 				CsvInputFormat.configureRecordFormat(src).field(StringValue.class, position);
-				System.err.println("VARCHAR FIELD " + field.getName()+ " of type:" + field.getType() + " position:" + position);
 			}
+			
 			position += 1;
 		}
 		
