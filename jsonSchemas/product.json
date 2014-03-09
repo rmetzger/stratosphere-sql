@@ -1,0 +1,20 @@
+{
+  "fields": [
+    {
+      "name": "productId",
+      "type": "INTEGER"
+    },
+    {
+      "name": "productName",
+      "type": "VARCHAR"
+    },
+    {
+      "name": "price",
+      "type": "INTEGER"
+    }
+  ],
+  "primaryKey": "productId",
+  "columnDelimiter": ",",
+  "rowDelimiter": "\\n",
+  "filePath": "/home/camelia2/stratosphere_sql/stratosphere-sql-1/simple2.csv"
+}
