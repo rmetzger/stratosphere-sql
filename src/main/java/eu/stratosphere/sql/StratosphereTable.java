@@ -19,23 +19,25 @@ import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
 import net.hydromatic.optiq.TranslatableTable;
+import eu.stratosphere.sql.relOpt.CSVStratosphereDataSource;
 
 public class StratosphereTable implements TranslatableTable {
 
 	private RelDataType rowType;
-
+	public String primaryKey;
+	public String filePath;
+	public String columnDelimiter = ","; //default is assumed to be comma
+	public String rowDelimiter = "\n"; //default is assumed to be newline
+	public String jsonFileName;
+	
+	
 	@Override
-	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-		if(rowType == null) {
-			List<Map.Entry<String, RelDataType>> fieldList = new ArrayList<Map.Entry<String, RelDataType>>();
-			Map.Entry<String, RelDataType> first = Pair.of("customerId", typeFactory.createSqlType(SqlTypeName.INTEGER));
-			Map.Entry<String, RelDataType> second = Pair.of("customerName", typeFactory.createSqlType(SqlTypeName.VARCHAR));
-			fieldList.add(first);
-			fieldList.add(second);
-			rowType = typeFactory.createStructType(fieldList);
-					//typeFactory.createSqlType(SqlTypeName.ROW);
-		}
+	public RelDataType getRowType(RelDataTypeFactory typeFactory) {		
 		return this.rowType;
+	}
+	
+	public void setRowType (RelDataType relData) {
+		this.rowType = relData;
 	}
 
 	@Override
@@ -50,7 +52,17 @@ public class StratosphereTable implements TranslatableTable {
 
 	@Override
 	public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
-		return new StratosphereDataSource(context.getCluster(), relOptTable);
+
+		String tableName = jsonFileName.substring(jsonFileName.lastIndexOf("/"));
+		if(filePath.endsWith(".csv")){
+			return new CSVStratosphereDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
+		}
+		else{
+			//return new StratosphereDataSource(context.getCluster(), relOptTable);
+			System.err.println("file format not yet supported");
+			return null;
+		}
+		
 	} 
 
 }

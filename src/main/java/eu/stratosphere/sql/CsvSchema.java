@@ -25,6 +25,18 @@ import com.google.common.collect.ImmutableMap;
 import java.io.*;
 import java.util.*;
 
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.JsonToken;
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeFactory;
+import org.eigenbase.sql.type.SqlTypeFactoryImpl;
+import org.eigenbase.sql.type.SqlTypeName;
+import org.eigenbase.util.Pair;
+
 /**
  * Schema mapped onto a directory of CSV files. Each table in the schema
  * is a CSV file in that directory.
@@ -32,6 +44,9 @@ import java.util.*;
 public class CsvSchema extends AbstractSchema {
   final File directoryFile;
   private final boolean smart;
+  private static ObjectMapper mapper = new ObjectMapper();
+  private static JsonFactory factory = mapper.getJsonFactory();
+
 
   /**
    * Creates a CSV schema.
@@ -60,7 +75,7 @@ public class CsvSchema extends AbstractSchema {
     File[] files = directoryFile.listFiles(
         new FilenameFilter() {
           public boolean accept(File dir, String name) {
-            return name.endsWith(".csv");
+            return name.endsWith(".json");
           }
         });
     if (files == null) {
@@ -69,21 +84,134 @@ public class CsvSchema extends AbstractSchema {
     }
     for (File file : files) {
       String tableName = file.getName();
-      if (tableName.endsWith(".csv")) {
-        tableName = tableName.substring(
-            0, tableName.length() - ".csv".length());
+      if (tableName.endsWith(".json")) {
+        tableName = tableName.substring(0, tableName.length() - ".json".length());
+        System.err.println("TABLE " + tableName.toUpperCase());
+        Table table = new StratosphereTable();
+        this.parseJSONSchema(table, file);
+        builder.put(tableName, table);
+
       }
-      final Table table;
-      if (smart) {
-        throw new RuntimeException("No smart table. Robert");
-      } else {
-        table = //new CsvTable(file, null);
-        	new StratosphereTable();
-      }
-      builder.put(tableName, table);
     }
     return builder.build();
   }
+  
+	public void parseJSONSchema(Table table, File file){
+		RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl() ;
+		List<Map.Entry<String, RelDataType>> fieldList = new ArrayList<Map.Entry<String, RelDataType>>();
+			
+		//read the table structure from a JSON file
+		((StratosphereTable)table).jsonFileName = file.getAbsolutePath();
+		JsonParser parser = null;
+	    FileReader reader = null;
+	    if (table instanceof StratosphereTable){
+		    try {
+			    	reader = new FileReader(file);
+			    	parser = factory.createJsonParser(reader);
+			    	JsonToken token = null;
+				    while ((token = parser.nextToken()) != null) {
+				      
+				    	if (token == JsonToken.FIELD_NAME) {
+					        if(parser.getText().equals("fields")) {			                
+				                	JsonToken token2 = parser.nextToken();
+				                    
+				                    /* event2 helps in iterating in the fields array
+				                     * 
+				                     * event2: START_ARRAY            --> the start of the array
+				                     * 
+				                     * event2: START_OBJECT           --> one for each field
+				                     * event2: KEY_NAME               --> "name" token
+				                     * event2: VALUE_STRING           -->  the field's name
+				                     * event2: KEY_NAME               --> "type" token
+				                     * event2: VALUE_STRING           -->  the field's type
+				                     * event2: END_OBJECT             --> end of one field
+				                     * ...
+				                     * 
+				                     * breaking the iteration when event2 becomes END_ARRAY
+				                     */
+				                    String fieldName;
+				                    String fieldType;
+				                    token2 = parser.nextToken();   
+				                    while(token2 != JsonToken.END_ARRAY){
+				                    	 fieldName = null;
+				                    	 fieldType = null;
+				                    	 Map.Entry<String, RelDataType> field = null;
+				                    	 token2 = parser.nextToken(); 			                    	 
+				                    	 if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("name"))) {
+				                    		 token2 = parser.nextToken(); 
+				                    		 fieldName = parser.getText();
+				                    		 System.err.print("" + fieldName);
+				                    	 }
+				                    	 token2 = parser.nextToken(); 
+				                    	 if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("type"))) {
+				                    		 token2 = parser.nextToken(); 
+				                    		 fieldType = parser.getText();
+				                    		 System.err.println("	" + fieldType);
+				                    		 switch (fieldType.toUpperCase()){
+				                    		 	case "INTEGER":
+				                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.INTEGER));
+				                    		 		break;
+				                    		 	case "VARCHAR":
+				                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.VARCHAR));
+				                    		 		break;
+				                    		 	case "CHAR":
+				                    		 		field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.CHAR));
+				                    		 		break;
+				                    		 }
+				                    		 fieldList.add(field);
+				                    	 }			                    	 
+				                    	 token2 = parser.nextToken(); 
+				                    	 token2 = parser.nextToken(); 			                    	 
+				                    }
+				                    
+					        	}
+					        else if (parser.getText().equals("primaryKey")){
+				                	 token = parser.nextToken();
+				                     ((StratosphereTable)table).primaryKey = parser.getText();		                     
+					        	}
+					        	else if (parser.getText().equals("columnDelimiter")){
+					                	 token = parser.nextToken();
+					                	 ((StratosphereTable)table).columnDelimiter = parser.getText();	                     
+					        		}
+					        		else if (parser.getText().equals("rowDelimiter")){
+						                	 token = parser.nextToken();
+						                	 ((StratosphereTable)table).rowDelimiter = parser.getText();			                     			                     
+					        			}
+					        			else if (parser.getText().equals("filePath")){
+							                	 token = parser.nextToken();
+							                	 ((StratosphereTable)table).filePath = parser.getText();
+					        			}
+				      }
+				    	
+				    }//while
+				    
+				    ((StratosphereTable)table).setRowType(typeFactory.createStructType(fieldList));
+		
+		    } catch (IOException e) {
+		        // ignore
+		      } finally {
+		        if (reader != null) {
+		          try {
+		            reader.close();
+		          } catch (IOException e) {
+		            // ignore
+		          }
+		        }
+	      }
+	    }
+	
+		//Treat exception cases
+		if(fieldList.isEmpty()){
+			System.err.println("ERROR: No fields defined for this table");
+			return;
+		}
+		if(((StratosphereTable)table).filePath == null){
+			System.err.println("ERROR: No file path specified for this table data file");
+			return;			
+		}
+	}
+
+  
 }
 
 // End CsvSchema.java

@@ -26,6 +26,7 @@ import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
+import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 import eu.stratosphere.sql.rules.StratosphereFilterRule;
@@ -79,7 +80,7 @@ public class Launcher  {
 			stratoRoot = stratoProj.getStratosphereOperator();
 			System.err.println("Strato Root Op "+ stratoRoot);
 			Class<? extends Value>[] fields = stratoProj.getFields();
-			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.out", stratoRoot, "Sql Result");
+			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file://"+ System.getProperty("user.dir")+"//simple.out", stratoRoot, "Sql Result");
 			plan = new Plan(out, "Stratosphere SQL: "+sql);
 		}
 		if(plan == null) {
@@ -89,10 +90,11 @@ public class Launcher  {
 	}
 	
 	public static void main(String[] args) throws Exception {
-	//	Plan plan = convertSQLToPlan("SELECT a.customerName, a.customerId, b.customerId "
-	//			+ "FROM tbl a, tbl b WHERE (a.customerId = b.customerId) AND (a.customerId < 15)");
+		Plan plan = convertSQLToPlan("SELECT customerName, customerId, customerId, customerId "
+				+ "FROM customer WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)");
+		LocalExecutor.execute(plan);
 		
-		Plan plan = convertSQLToPlan("SELECT COUNT(*) FROM tbl GROUP BY customerName");
+		//Plan plan = convertSQLToPlan("SELECT COUNT(*) FROM tbl GROUP BY customerName");
 		
 		//Plan plan = convertSQLToPlan("SELECT SUBSTRING(customerName, 1, 10), SUM(customerId) FROM tbl GROUP BY SUBSTRING(customerName, 1, 10)");
 				
