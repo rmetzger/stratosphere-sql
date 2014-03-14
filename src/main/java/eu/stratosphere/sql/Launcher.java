@@ -1,5 +1,6 @@
 package eu.stratosphere.sql;
 
+import java.io.File;
 import java.io.PrintWriter;
 
 import net.hydromatic.linq4j.function.Function1;
@@ -40,7 +41,8 @@ import eu.stratosphere.types.Value;
 public class Launcher  {
 	
 	public static Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
-		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory();
+		File jsonSchemaStoreDir = new File("src/main/resources/jsonSchemas/");
+		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory(jsonSchemaStoreDir);
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
 			(RelOptRule) StratosphereProjectionRule.INSTANCE,

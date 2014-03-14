@@ -17,25 +17,29 @@
 */
 package eu.stratosphere.sql;
 
-import net.hydromatic.optiq.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
-import com.google.common.collect.ImmutableMap;
-
-import java.io.*;
-import java.util.*;
-
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.JsonToken;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.JsonToken;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Pair;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Schema mapped onto a directory of CSV files. Each table in the schema
@@ -43,7 +47,6 @@ import org.eigenbase.util.Pair;
  */
 public class CsvSchema extends AbstractSchema {
   final File directoryFile;
-  private final boolean smart;
   private static ObjectMapper mapper = new ObjectMapper();
   private static JsonFactory factory = mapper.getJsonFactory();
 
@@ -60,11 +63,12 @@ public class CsvSchema extends AbstractSchema {
   public CsvSchema(
       SchemaPlus parentSchema,
       String name,
-      File directoryFile,
-      boolean smart) {
+      File directoryFile) {
     super(parentSchema, name);
     this.directoryFile = directoryFile;
-    this.smart = smart;
+    if(!directoryFile.exists()) {
+    	throw new RuntimeException("Schema repository directory "+directoryFile.getAbsolutePath()+" does not exist");
+    }
   }
 
   @Override

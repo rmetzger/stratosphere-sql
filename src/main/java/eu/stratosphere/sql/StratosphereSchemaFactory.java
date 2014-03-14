@@ -11,10 +11,13 @@ import net.hydromatic.optiq.Table;
 
 public class StratosphereSchemaFactory implements Function1<SchemaPlus, Schema> {
 
+	private final File jsonSchemaStoreDir;
+	public StratosphereSchemaFactory(File jsonSchemaStoreDir) {
+		this.jsonSchemaStoreDir = jsonSchemaStoreDir;
+	}
 	@Override
 	public Schema apply(SchemaPlus incoming) {
-
-		Schema schema = new CsvSchema(incoming, "mySchema", new File("jsonSchemas/"), false);
+		Schema schema = new CsvSchema(incoming, "mySchema", jsonSchemaStoreDir);
 		return incoming.add(schema);
 
 	}
