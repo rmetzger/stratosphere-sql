@@ -17,158 +17,159 @@
 */
 package eu.stratosphere.sql;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+
 import net.hydromatic.linq4j.Enumerator;
-
 import au.com.bytecode.opencsv.CSVReader;
-
-import java.io.*;
 
 /** Enumerator that reads from a CSV file. */
 class CsvEnumerator implements Enumerator<Object> {
-  private final CSVReader reader;
-  private final RowConverter rowConverter;
-  private Object current;
+	private final CSVReader reader;
+	private final RowConverter rowConverter;
+	private Object current;
 
-  public CsvEnumerator(File file, CsvFieldType[] fieldTypes) {
-    this(file, fieldTypes, identityList(fieldTypes.length));
-  }
+	public CsvEnumerator(File file, CsvFieldType[] fieldTypes) {
+	this(file, fieldTypes, identityList(fieldTypes.length));
+	}
 
-  public CsvEnumerator(File file, CsvFieldType[] fieldTypes, int[] fields) {
-    this.rowConverter = fields.length == 1
-        ? new SingleColumnRowConverter(fieldTypes[fields[0]], fields[0])
-        : new ArrayRowConverter(fieldTypes, fields);
-    try {
-      this.reader = new CSVReader(new FileReader(file));
-      this.reader.readNext(); // skip header row
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+	public CsvEnumerator(File file, CsvFieldType[] fieldTypes, int[] fields) {
+	this.rowConverter = fields.length == 1
+		? new SingleColumnRowConverter(fieldTypes[fields[0]], fields[0])
+		: new ArrayRowConverter(fieldTypes, fields);
+	try {
+		this.reader = new CSVReader(new FileReader(file));
+		this.reader.readNext(); // skip header row
+	} catch (IOException e) {
+		throw new RuntimeException(e);
+	}
+	}
 
-  public Object current() {
-    return current;
-  }
+	public Object current() {
+	return current;
+	}
 
-  public boolean moveNext() {
-    try {
-      final String[] strings = reader.readNext();
-      if (strings == null) {
-        current = null;
-        reader.close();
-        return false;
-      }
-      current = rowConverter.convertRow(strings);
-      return true;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+	public boolean moveNext() {
+	try {
+		final String[] strings = reader.readNext();
+		if (strings == null) {
+		current = null;
+		reader.close();
+		return false;
+		}
+		current = rowConverter.convertRow(strings);
+		return true;
+	} catch (IOException e) {
+		throw new RuntimeException(e);
+	}
+	}
 
-  public void reset() {
-    throw new UnsupportedOperationException();
-  }
+	public void reset() {
+	throw new UnsupportedOperationException();
+	}
 
-  public void close() {
-    try {
-      reader.close();
-    } catch (IOException e) {
-      throw new RuntimeException("Error closing CSV reader", e);
-    }
-  }
+	public void close() {
+	try {
+		reader.close();
+	} catch (IOException e) {
+		throw new RuntimeException("Error closing CSV reader", e);
+	}
+	}
 
-  /** Returns an array of integers {0, ..., n - 1}. */
-  static int[] identityList(int n) {
-    int[] integers = new int[n];
-    for (int i = 0; i < n; i++) {
-      integers[i] = i;
-    }
-    return integers;
-  }
+	/** Returns an array of integers {0, ..., n - 1}. */
+	static int[] identityList(int n) {
+	int[] integers = new int[n];
+	for (int i = 0; i < n; i++) {
+		integers[i] = i;
+	}
+	return integers;
+	}
 
-  private abstract static class RowConverter {
-    abstract Object convertRow(String[] rows);
+	private abstract static class RowConverter {
+	abstract Object convertRow(String[] rows);
 
-    protected Object convert(CsvFieldType fieldType, String string) {
-      if (fieldType == null) {
-        return string;
-      }
-      switch (fieldType) {
-      default:
-      case STRING:
-        return string;
-      case BOOLEAN:
-        if (string.length() == 0) {
-          return null;
-        }
-        return Boolean.parseBoolean(string);
-      case BYTE:
-        if (string.length() == 0) {
-          return null;
-        }
-        return Byte.parseByte(string);
-      case SHORT:
-        if (string.length() == 0) {
-          return null;
-        }
-        return Short.parseShort(string);
-      case INT:
-        if (string.length() == 0) {
-          return null;
-        }
-        return Integer.parseInt(string);
-      case LONG:
-        if (string.length() == 0) {
-          return null;
-        }
-        return Long.parseLong(string);
-      case FLOAT:
-        if (string.length() == 0) {
-          return null;
-        }
-        return Float.parseFloat(string);
-      case DOUBLE:
-        if (string.length() == 0) {
-          return null;
-        }
-        return Double.parseDouble(string);
-      }
-    }
-  }
+	protected Object convert(CsvFieldType fieldType, String string) {
+		if (fieldType == null) {
+		return string;
+		}
+		switch (fieldType) {
+		default:
+		case STRING:
+		return string;
+		case BOOLEAN:
+		if (string.length() == 0) {
+			return null;
+		}
+		return Boolean.parseBoolean(string);
+		case BYTE:
+		if (string.length() == 0) {
+			return null;
+		}
+		return Byte.parseByte(string);
+		case SHORT:
+		if (string.length() == 0) {
+			return null;
+		}
+		return Short.parseShort(string);
+		case INT:
+		if (string.length() == 0) {
+			return null;
+		}
+		return Integer.parseInt(string);
+		case LONG:
+		if (string.length() == 0) {
+			return null;
+		}
+		return Long.parseLong(string);
+		case FLOAT:
+		if (string.length() == 0) {
+			return null;
+		}
+		return Float.parseFloat(string);
+		case DOUBLE:
+		if (string.length() == 0) {
+			return null;
+		}
+		return Double.parseDouble(string);
+		}
+	}
+	}
 
-  private static class ArrayRowConverter extends RowConverter {
+	private static class ArrayRowConverter extends RowConverter {
 
-    private final CsvFieldType[] fieldTypes;
-    private final int[] fields;
+	private final CsvFieldType[] fieldTypes;
+	private final int[] fields;
 
-    private ArrayRowConverter(CsvFieldType[] fieldTypes, int[] fields) {
-      this.fieldTypes = fieldTypes;
-      this.fields = fields;
-    }
+	private ArrayRowConverter(CsvFieldType[] fieldTypes, int[] fields) {
+		this.fieldTypes = fieldTypes;
+		this.fields = fields;
+	}
 
-    public Object convertRow(String[] strings) {
-      final Object[] objects = new Object[fields.length];
-      for (int i = 0; i < fields.length; i++) {
-        int field = fields[i];
-        objects[i] = convert(fieldTypes[field], strings[field]);
-      }
-      return objects;
-    }
-  }
+	public Object convertRow(String[] strings) {
+		final Object[] objects = new Object[fields.length];
+		for (int i = 0; i < fields.length; i++) {
+		int field = fields[i];
+		objects[i] = convert(fieldTypes[field], strings[field]);
+		}
+		return objects;
+	}
+	}
 
-  private static class SingleColumnRowConverter extends RowConverter {
+	private static class SingleColumnRowConverter extends RowConverter {
 
-    private final CsvFieldType fieldType;
-    private final int fieldIndex;
+	private final CsvFieldType fieldType;
+	private final int fieldIndex;
 
-    private SingleColumnRowConverter(CsvFieldType fieldType, int fieldIndex) {
-      this.fieldType = fieldType;
-      this.fieldIndex = fieldIndex;
-    }
+	private SingleColumnRowConverter(CsvFieldType fieldType, int fieldIndex) {
+		this.fieldType = fieldType;
+		this.fieldIndex = fieldIndex;
+	}
 
-    public Object convertRow(String[] strings) {
-      return convert(fieldType, strings[fieldIndex]);
-    }
-  }
+	public Object convertRow(String[] strings) {
+		return convert(fieldType, strings[fieldIndex]);
+	}
+	}
 
 }
 

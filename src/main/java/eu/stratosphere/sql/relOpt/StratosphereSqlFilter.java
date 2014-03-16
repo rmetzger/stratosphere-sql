@@ -14,8 +14,6 @@ import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexLocalRef;
 import org.eigenbase.rex.RexNode;
-import org.eigenbase.rex.RexProgram;
-import org.eigenbase.rex.RexProgramBuilder;
 
 import com.google.common.base.Preconditions;
 
@@ -28,7 +26,7 @@ import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
 
-public class StratosphereSqlFilter  extends FilterRelBase implements StratosphereRel {
+public class StratosphereSqlFilter	extends FilterRelBase implements StratosphereRel {
 	public StratosphereSqlFilter(RelOptCluster cluster, RelTraitSet traits,
 			RelNode child, RexNode condition) {
 		super(cluster, traits, child, condition);
@@ -43,18 +41,18 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 	
 	public static class StratosphereSqlFilterMapOperator extends MapFunction {
 		private static final long serialVersionUID = 1L;
+		private static final JexlEngine JEXL = new JexlEngine();
 		
-		private static final JexlEngine jexl = new JexlEngine();
-        static {
-           jexl.setCache(512);
-           jexl.setLenient(false);
-           jexl.setSilent(false);
-        }
-        
-        private String exprStr;
-        private transient Expression expr;
-        private transient JexlContext context;
-        private List<StratosphereRelUtils.ExprVar> variables;
+		static {
+			JEXL.setCache(512);
+			JEXL.setLenient(false);
+			JEXL.setSilent(false);
+		}
+		
+		private String exprStr;
+		private transient Expression expr;
+		private transient JexlContext context;
+		private List<StratosphereRelUtils.ExprVar> variables;
 		public StratosphereSqlFilterMapOperator(String expression, List<StratosphereRelUtils.ExprVar> vars) {
 			this.exprStr = expression;
 			this.variables = vars;
@@ -62,7 +60,7 @@ public class StratosphereSqlFilter  extends FilterRelBase implements Stratospher
 		@Override
 		public void open(Configuration parameters) throws Exception {
 			super.open(parameters);
-			this.expr = jexl.createExpression(exprStr);
+			this.expr = JEXL.createExpression(exprStr);
 			this.context = new MapContext();
 		}
 

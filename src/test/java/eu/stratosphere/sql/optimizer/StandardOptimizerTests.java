@@ -14,7 +14,7 @@ import eu.stratosphere.sql.Launcher;
 public class StandardOptimizerTests {
 	
 //	String sql = "SELECT a.cnt "
-//	+ "FROM (SELECT COUNT(*) AS cnt FROM tbl GROUP BY NAME) AS a, tbl  "
+//	+ "FROM (SELECT COUNT(*) AS cnt FROM tbl GROUP BY NAME) AS a, tbl	"
 //	+ "WHERE a.cnt = tbl.DEPTNO "
 //	+ "ORDER BY a.cnt ASC LIMIT 2";
 	private static String[] queries = {

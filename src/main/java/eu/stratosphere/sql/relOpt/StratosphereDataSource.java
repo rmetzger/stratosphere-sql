@@ -12,17 +12,17 @@ import eu.stratosphere.api.java.record.io.CsvInputFormat;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.StringValue;
 
-public class StratosphereDataSource  extends TableAccessRelBase implements StratosphereRel {
+public class StratosphereDataSource	extends TableAccessRelBase implements StratosphereRel {
 
 	public StratosphereDataSource(
-		      RelOptCluster cluster,
-		      RelOptTable table) {
-		    super(
-		        cluster,
-		        cluster.traitSetOf(StratosphereRel.CONVENTION),
-		        table);
-		    Preconditions.checkArgument(getConvention() == CONVENTION);
-		  }
+				RelOptCluster cluster,
+				RelOptTable table) {
+			super(
+				cluster,
+				cluster.traitSetOf(StratosphereRel.CONVENTION),
+				table);
+			Preconditions.checkArgument(getConvention() == CONVENTION);
+			}
 
 
 	@Override

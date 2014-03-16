@@ -13,13 +13,13 @@ import eu.stratosphere.sql.relOpt.StratosphereSqlFilter;
 
 public class StratosphereFilterRule extends ConverterRule {
 
-	public static StratosphereFilterRule INSTANCE = new StratosphereFilterRule();
+	final public static StratosphereFilterRule INSTANCE = new StratosphereFilterRule();
 	
 	public StratosphereFilterRule() {
 		super(FilterRel.class,
-		          Convention.NONE,
-		          StratosphereRel.CONVENTION,
-		          "StratosphereFilterRule");
+					Convention.NONE,
+					StratosphereRel.CONVENTION,
+					"StratosphereFilterRule");
 	}
 
 	@Override

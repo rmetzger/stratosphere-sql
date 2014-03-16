@@ -1,34 +1,28 @@
 package eu.stratosphere.sql;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import net.hydromatic.optiq.Schema.TableType;
+import net.hydromatic.optiq.Statistic;
+import net.hydromatic.optiq.Statistics;
+import net.hydromatic.optiq.TranslatableTable;
 
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
 import org.eigenbase.relopt.RelOptTable.ToRelContext;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
-import org.eigenbase.reltype.RelDataTypeFactory.FieldInfo;
-import org.eigenbase.sql.type.SqlTypeName;
-import org.eigenbase.util.Pair;
 
-import eu.stratosphere.sql.relOpt.StratosphereDataSource;
-import net.hydromatic.optiq.Schema.TableType;
-import net.hydromatic.optiq.Statistic;
-import net.hydromatic.optiq.Statistics;
-import net.hydromatic.optiq.TranslatableTable;
 import eu.stratosphere.sql.relOpt.CSVStratosphereDataSource;
 
 public class StratosphereTable implements TranslatableTable {
 
 	private RelDataType rowType;
+	//CHECKSTYLE:OFF
 	public String primaryKey;
 	public String filePath;
 	public String columnDelimiter = ","; //default is assumed to be comma
 	public String rowDelimiter = "\n"; //default is assumed to be newline
 	public String jsonFileName;
+	//CHECKSTYLE:ON
 	
 	
 	@Override
@@ -56,8 +50,7 @@ public class StratosphereTable implements TranslatableTable {
 		String tableName = jsonFileName.substring(jsonFileName.lastIndexOf("/"));
 		if(filePath.endsWith(".csv")){
 			return new CSVStratosphereDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
-		}
-		else{
+		} else{
 			//return new StratosphereDataSource(context.getCluster(), relOptTable);
 			System.err.println("file format not yet supported");
 			return null;

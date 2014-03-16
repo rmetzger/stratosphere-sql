@@ -4,14 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import org.eigenbase.rel.InvalidRelException;
 import org.eigenbase.rel.JoinRelBase;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
-import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexNode;
 
@@ -23,14 +21,13 @@ import eu.stratosphere.api.java.record.operators.JoinOperator;
 import eu.stratosphere.sql.StratosphereSQLException;
 import eu.stratosphere.types.Key;
 import eu.stratosphere.types.Record;
-import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
 
 public class StratosphereSqlJoin extends JoinRelBase implements RelNode, StratosphereRel {
 
-	List<Integer> leftKeys;
-	List<Integer> rightKeys;
+	private List<Integer> leftKeys;
+	private List<Integer> rightKeys;
 	
 	public static class StratosphereSqlJoinOperator extends JoinFunction {
 		private static final long serialVersionUID = 1L;
@@ -65,19 +62,19 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 			throw new StratosphereSQLException("The join operator currently supports only join on two inputs");
 		}
 		leftKeys = new ArrayList<Integer>();
-	    rightKeys = new ArrayList<Integer>();
-	      RexNode remaining =
-	          RelOptUtil.splitJoinCondition(
-	              left,
-	              right,
-	              condition,
-	              leftKeys,
-	              rightKeys);
-	      if (!remaining.isAlwaysTrue()) {
-	        throw new StratosphereSQLException(
-	            "StratosphereSqlJoinOperator only supports equi-join");
-	      }
-	      Preconditions.checkArgument( leftKeys.size() == rightKeys.size() );
+		rightKeys = new ArrayList<Integer>();
+			RexNode remaining =
+				RelOptUtil.splitJoinCondition(
+					left,
+					right,
+					condition,
+					leftKeys,
+					rightKeys);
+			if (!remaining.isAlwaysTrue()) {
+			throw new StratosphereSQLException(
+				"StratosphereSqlJoinOperator only supports equi-join");
+			}
+			Preconditions.checkArgument( leftKeys.size() == rightKeys.size() );
 		RelNode leftRel = getInput(0);
 		RelNode rightRel = getInput(1);
 		Operator leftOperator = StratosphereRelUtils.toStratoRel(leftRel).getStratosphereOperator();

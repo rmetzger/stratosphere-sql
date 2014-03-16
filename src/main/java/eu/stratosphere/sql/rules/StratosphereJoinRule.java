@@ -11,13 +11,13 @@ import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlJoin;
 
 public class StratosphereJoinRule extends ConverterRule {
-	public static StratosphereJoinRule INSTANCE = new StratosphereJoinRule();
+	final public static StratosphereJoinRule INSTANCE = new StratosphereJoinRule();
 
 	public StratosphereJoinRule() {
 		super(JoinRel.class,
-		          Convention.NONE,
-		          StratosphereRel.CONVENTION,
-		          "StratosphereJoinRule");
+					Convention.NONE,
+					StratosphereRel.CONVENTION,
+					"StratosphereJoinRule");
 	}
 	@Override
 	public RelNode convert(RelNode rel) {

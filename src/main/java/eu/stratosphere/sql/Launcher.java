@@ -38,7 +38,8 @@ import eu.stratosphere.types.Value;
 
 
 
-public class Launcher  {
+public class Launcher	{
+	private Launcher() { }
 	
 	public static Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
 		File jsonSchemaStoreDir = new File("src/main/resources/jsonSchemas/");
@@ -65,10 +66,10 @@ public class Launcher  {
 		
 		// set high debugging level for optimizer
 //		EigenbaseTrace.getPlannerTracer().setLevel(Level.ALL);
-// 	  	ConsoleHandler handler = new ConsoleHandler();
-//        handler.setLevel(Level.ALL);
-//        EigenbaseTrace.getPlannerTracer().addHandler(handler);
-	    
+// 			ConsoleHandler handler = new ConsoleHandler();
+//		handler.setLevel(Level.ALL);
+//		EigenbaseTrace.getPlannerTracer().addHandler(handler);
+		
 		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet().plus(StratosphereRel.CONVENTION), rel);
 		
 		System.err.println("Optimizer "+ convertedRelNode);

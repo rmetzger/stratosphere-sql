@@ -3,7 +3,6 @@ package eu.stratosphere.sql;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.reltype.RelDataTypeField;
 import org.eigenbase.reltype.RelDataTypeFieldImpl;
@@ -12,11 +11,9 @@ import org.eigenbase.sql.type.SqlTypeFactoryImpl;
 import org.eigenbase.sql.type.SqlTypeName;
 
 public class StratosphereRelType extends RelDataTypeImpl {
-
-	
 	private RelDataTypeFactory typeFactory;
-	List<RelDataTypeField> fields;
-	List<String> fieldNames = new ArrayList<String>();
+	private List<RelDataTypeField> fields;
+	private List<String> fieldNames = new ArrayList<String>();
 	
 	public StratosphereRelType() {
 		this.digest = "StratosphereSQLRow";
@@ -32,7 +29,7 @@ public class StratosphereRelType extends RelDataTypeImpl {
 			fieldNames.add("*");
 			fields = ret;
 		} 
-        return fields;
+		return fields;
 	}
 	@Override
 	protected void generateTypeString(StringBuilder sb, boolean withDetail) {

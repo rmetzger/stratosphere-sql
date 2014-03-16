@@ -17,12 +17,15 @@
 */
 package eu.stratosphere.sql;
 
-import net.hydromatic.optiq.*;
-
-import org.eigenbase.reltype.*;
-
 import java.io.File;
 import java.util.Map;
+
+import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.TableFactory;
+
+import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.reltype.RelDataTypeImpl;
+import org.eigenbase.reltype.RelProtoDataType;
 
 /**
  * Factory that creates a {@link CsvTable}.
@@ -32,16 +35,16 @@ import java.util.Map;
  */
 @SuppressWarnings("UnusedDeclaration")
 public class CsvTableFactory implements TableFactory<CsvTable> {
-  // public constructor, per factory contract
-  public CsvTableFactory() {
-  }
+	// public constructor, per factory contract
+	public CsvTableFactory() {
+	}
 
-  public CsvTable create(SchemaPlus schema, String name,
-      Map<String, Object> map, RelDataType rowType) {
-    final File file = new File("oserhase");
-    final RelProtoDataType protoRowType = rowType != null ? RelDataTypeImpl.proto(rowType) : null;
-    return new CsvTable(file, protoRowType);
-  }
+	public CsvTable create(SchemaPlus schema, String name,
+		Map<String, Object> map, RelDataType rowType) {
+	final File file = new File("oserhase");
+	final RelProtoDataType protoRowType = rowType != null ? RelDataTypeImpl.proto(rowType) : null;
+	return new CsvTable(file, protoRowType);
+	}
 }
 
 // End CsvTableFactory.java

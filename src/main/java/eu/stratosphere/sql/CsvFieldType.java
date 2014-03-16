@@ -17,14 +17,13 @@
 */
 package eu.stratosphere.sql;
 
-import net.hydromatic.optiq.impl.java.JavaTypeFactory;
-
-import net.hydromatic.linq4j.expressions.Primitive;
-
-import org.eigenbase.reltype.RelDataType;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import net.hydromatic.linq4j.expressions.Primitive;
+import net.hydromatic.optiq.impl.java.JavaTypeFactory;
+
+import org.eigenbase.reltype.RelDataType;
 
 /**
  * Type of a field in a CSV file.
@@ -34,50 +33,50 @@ import java.util.Map;
  * makes it easier to write SQL.</p>
  */
 enum CsvFieldType {
-  STRING(null, String.class),
-  BOOLEAN(Primitive.BOOLEAN),
-  BYTE(Primitive.BYTE),
-  CHAR(Primitive.CHAR),
-  SHORT(Primitive.SHORT),
-  INT(Primitive.INT),
-  LONG(Primitive.LONG),
-  FLOAT(Primitive.FLOAT),
-  DOUBLE(Primitive.DOUBLE),
-  DATE(null, java.sql.Date.class),
-  TIME(null, java.sql.Time.class),
-  TIMESTAMP(null, java.sql.Timestamp.class);
+	STRING(null, String.class),
+	BOOLEAN(Primitive.BOOLEAN),
+	BYTE(Primitive.BYTE),
+	CHAR(Primitive.CHAR),
+	SHORT(Primitive.SHORT),
+	INT(Primitive.INT),
+	LONG(Primitive.LONG),
+	FLOAT(Primitive.FLOAT),
+	DOUBLE(Primitive.DOUBLE),
+	DATE(null, java.sql.Date.class),
+	TIME(null, java.sql.Time.class),
+	TIMESTAMP(null, java.sql.Timestamp.class);
 
-  private final Primitive primitive;
-  private final Class clazz;
+	private final Primitive primitive;
+	private final Class clazz;
 
-  private static final Map<String, CsvFieldType> MAP =
-    new HashMap<String, CsvFieldType>();
+	private static final Map<String, CsvFieldType> MAP =
+	new HashMap<String, CsvFieldType>();
 
-  static {
-    for (CsvFieldType value : values()) {
-      MAP.put(value.clazz.getSimpleName(), value);
-      if (value.primitive != null) {
-        MAP.put(value.primitive.primitiveClass.getSimpleName(), value);
-      }
-    }
-  }
+	static {
+	for (CsvFieldType value : values()) {
+		MAP.put(value.clazz.getSimpleName(), value);
+		if (value.primitive != null) {
+		MAP.put(value.primitive.primitiveClass.getSimpleName(), value);
+		}
+	}
+	}
 
-  CsvFieldType(Primitive primitive) {
-    this(primitive, primitive.boxClass);
-  }
+	CsvFieldType(Primitive primitive) {
+	this(primitive, primitive.boxClass);
+	}
 
-  CsvFieldType(Primitive primitive, Class clazz) {
-    this.primitive = primitive;
-    this.clazz = clazz;
-  }
+	CsvFieldType(Primitive primitive, Class clazz) {
+	this.primitive = primitive;
+	this.clazz = clazz;
+	}
 
-  public RelDataType toType(JavaTypeFactory typeFactory) {
-    return typeFactory.createJavaType(clazz);
-  }
+	public RelDataType toType(JavaTypeFactory typeFactory) {
+	return typeFactory.createJavaType(clazz);
+	}
 
-  public static CsvFieldType of(String typeString) {
-    return MAP.get(typeString);
-  }
+	public static CsvFieldType of(String typeString) {
+	return MAP.get(typeString);
+	}
 }
 
 // End CsvFieldType.java

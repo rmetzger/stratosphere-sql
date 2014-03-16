@@ -35,54 +35,46 @@ public class CSVStratosphereDataSource extends StratosphereDataSource {
 			String columnDelimiter, String rowDelimiter, String filePath,
 			String tableName, RelDataType rowType) {
 		super(cluster, table);
-	    this.columnDelimiter = columnDelimiter;
-	    this.rowDelimiter = rowDelimiter;
-	    this.filePath = filePath;
-	    this.tableName = tableName;
-	    this.rowType = rowType;
+		this.columnDelimiter = columnDelimiter;
+		this.rowDelimiter = rowDelimiter;
+		this.filePath = filePath;
+		this.tableName = tableName;
+		this.rowType = rowType;
 	}
 	
 	@Override
 	public Operator getStratosphereOperator() {
-
 		//here we use the delimiters set in the json schema
 		List<RelDataTypeField> fieldList = rowType.getFieldList();
 		int position = 0;
 		FileDataSource src = new FileDataSource(new CsvInputFormat(), "file://" + filePath, tableName);
 		
 		//it needs to loose a backslash
-		if(rowDelimiter.equals("\\n"))
+		if(rowDelimiter.equals("\\n")) {
 			rowDelimiter = "\n";
+		}
 		
 		CsvInputFormat.configureRecordFormat(src)
-        	.recordDelimiter(rowDelimiter)
-        	.fieldDelimiter(columnDelimiter.charAt(0));  
+			.recordDelimiter(rowDelimiter)
+			.fieldDelimiter(columnDelimiter.charAt(0));	
 		
 				
-		for (RelDataTypeField field : fieldList){
-			
+		for (RelDataTypeField field : fieldList) {
 			if(field.getType().toString().equals("INTEGER")) {
 				CsvInputFormat.configureRecordFormat(src).field(IntValue.class, position);
-			}
-			else if(field.getType().toString().equals("BIGINT")) {
+			} else if(field.getType().toString().equals("BIGINT")) {
 				CsvInputFormat.configureRecordFormat(src).field(LongValue.class, position);
-			}
-			else if(field.getType().toString().equals("SMALLINT")) {
+			} else if(field.getType().toString().equals("SMALLINT")) {
 				CsvInputFormat.configureRecordFormat(src).field(ShortValue.class, position);
-			}
-			else if(field.getType().toString().equals("TINYINT")) {
+			} else if(field.getType().toString().equals("TINYINT")) {
 				CsvInputFormat.configureRecordFormat(src).field(ByteValue.class, position);
-			}
-			else if(field.getType().toString().equals("FLOAT")) {
+			} else if(field.getType().toString().equals("FLOAT")) {
 				CsvInputFormat.configureRecordFormat(src).field(FloatValue.class, position);
-			}
-			else if(field.getType().toString().equals("DOUBLE")) {
+			} else if(field.getType().toString().equals("DOUBLE")) {
 				CsvInputFormat.configureRecordFormat(src).field(DoubleValue.class, position);
-			}
-			else if(field.getType().toString().startsWith("CHAR")) {
+			} else if(field.getType().toString().startsWith("CHAR")) {
 				CsvInputFormat.configureRecordFormat(src).field(CharValue.class, position);
-			}
-			else if(field.getType().toString().startsWith("VARCHAR")) {
+			} else if(field.getType().toString().startsWith("VARCHAR")) {
 				CsvInputFormat.configureRecordFormat(src).field(StringValue.class, position);
 			}
 			

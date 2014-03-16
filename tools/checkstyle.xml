@@ -5,6 +5,7 @@
 
 <module name="Checker">
   <module name="FileLength" />
+  <module name="SuppressionCommentFilter"/>
   <module name="TreeWalker">
     <module name="RegexpSinglelineJava">
       <property name="format" value="^\t* +\t*\S" />
@@ -12,6 +13,7 @@
         value="Line has leading space characters; indentation should be performed with tabs only." />
       <property name="ignoreComments" value="true" />
     </module>
+    <module name="FileContentsHolder" />
     <module name="ConstantName" />
     <module name="LocalFinalVariableName" />
     <module name="LocalVariableName" />
@@ -27,7 +29,6 @@
     <module name="MethodLength" />
     <module name="ParameterNumber" />
     <module name="AvoidNestedBlocks" />
-    <module name="EmptyBlock" />
     <module name="LeftCurly" />
     <module name="NeedBraces" />
     <module name="RightCurly" />

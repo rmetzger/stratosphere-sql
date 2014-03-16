@@ -52,9 +52,8 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	 */
 	public static class StratosphereSqlProjectionMapOperator extends MapFunction {
 		private static final long serialVersionUID = 1L;
-		List<Entry<Integer, ? extends Class<? extends Value>>> types;
-		
-		Record outRec = new Record();
+		private List<Entry<Integer, ? extends Class<? extends Value>>> types;
+		private Record outRec = new Record();
 		
 		public StratosphereSqlProjectionMapOperator(List<Entry<Integer, ? extends Class<? extends Value>>> types) {
 			this.types = types;

@@ -1,11 +1,11 @@
 /**
  * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
+ * or more contributor license agreements.	See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
+ * regarding copyright ownership.	The ASF licenses this file
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * with the License.	You may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -26,21 +26,21 @@ import org.eigenbase.relopt.RelTrait;
  * This code has been copied from drill!!!
  */
 public class RelOptHelper {
-  
-  public static RelOptRuleOperand any(Class<? extends RelNode> first, RelTrait trait){
-    return RelOptRule.operand(first, trait, RelOptRule.any());
-  }
+	private RelOptHelper() {}
+	public static RelOptRuleOperand any(Class<? extends RelNode> first, RelTrait trait){
+		return RelOptRule.operand(first, trait, RelOptRule.any());
+	}
 
-  public static RelOptRuleOperand any(Class<? extends RelNode> first){
-    return RelOptRule.operand(first, RelOptRule.any());
-  }
-  
-  public static RelOptRuleOperand some(Class<? extends RelNode> rel, RelOptRuleOperand first, RelOptRuleOperand... rest){
-    return RelOptRule.operand(rel, RelOptRule.some(first, rest));
-  }
+	public static RelOptRuleOperand any(Class<? extends RelNode> first){
+		return RelOptRule.operand(first, RelOptRule.any());
+	}
+	
+	public static RelOptRuleOperand some(Class<? extends RelNode> rel, RelOptRuleOperand first, RelOptRuleOperand... rest){
+		return RelOptRule.operand(rel, RelOptRule.some(first, rest));
+	}
 
-  public static RelOptRuleOperand some(Class<? extends RelNode> rel, RelTrait trait, RelOptRuleOperand first, RelOptRuleOperand... rest){
-    return RelOptRule.operand(rel, trait, RelOptRule.some(first, rest));
-  }
+	public static RelOptRuleOperand some(Class<? extends RelNode> rel, RelTrait trait, RelOptRuleOperand first, RelOptRuleOperand... rest){
+		return RelOptRule.operand(rel, trait, RelOptRule.some(first, rest));
+	}
 
 }

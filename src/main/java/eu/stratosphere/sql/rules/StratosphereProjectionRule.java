@@ -12,20 +12,20 @@ import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 
 public class StratosphereProjectionRule extends ConverterRule {
 
-	public static StratosphereProjectionRule INSTANCE = new StratosphereProjectionRule();
+	final public static StratosphereProjectionRule INSTANCE = new StratosphereProjectionRule();
 	
 	/**
-	 *  public ConverterRule(
-      Class<? extends RelNode> clazz,
-      RelTrait in,
-      RelTrait out,
-      String description) {
+	 *	public ConverterRule(
+		Class<? extends RelNode> clazz,
+		RelTrait in,
+		RelTrait out,
+		String description) {
 	 */
 	public StratosphereProjectionRule() {
-		 super(ProjectRel.class,
-		          Convention.NONE,
-		          StratosphereRel.CONVENTION,
-		          "StratosphereProjectionRule");
+		super(ProjectRel.class,
+			Convention.NONE,
+			StratosphereRel.CONVENTION,
+			"StratosphereProjectionRule");
 	}
 
 	@Override

@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.volcano.RelSubset;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexCall;
 import org.eigenbase.rex.RexInputRef;
@@ -19,8 +18,8 @@ import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
 
 public class StratosphereRelUtils {
-
-
+	private StratosphereRelUtils() {}
+	
 	public static Value newValue(RelDataType in) {
 		if(in.getSqlTypeName() == SqlTypeName.INTEGER) {
 			return new IntValue();
@@ -101,10 +100,12 @@ public class StratosphereRelUtils {
 	}
 
 	public static class ExprVar implements Serializable {
+		//CHECKSTYLE:OFF
 		private static final long serialVersionUID = 1L;
 		public Class<? extends Value> type;
 		public int positionInRecord;
 		public String varName;
+		//CHECKSTYLE:ON
 	}
 	
 	public static void getExprVarsFromRexCall(RexNode cond, List<ExprVar> result) {
