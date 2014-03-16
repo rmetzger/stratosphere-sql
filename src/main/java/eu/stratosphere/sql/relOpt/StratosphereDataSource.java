@@ -1,10 +1,8 @@
 package eu.stratosphere.sql.relOpt;
 
 import org.eigenbase.rel.TableAccessRelBase;
-import org.eigenbase.relopt.Convention;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelTraitSet;
 
 import com.google.common.base.Preconditions;
 
@@ -32,5 +30,4 @@ public class StratosphereDataSource  extends TableAccessRelBase implements Strat
 		FileDataSource src = new FileDataSource(new CsvInputFormat(IntValue.class, StringValue.class), "file:///home/robert/Projekte/ozone/stratosphere-sql/simple.csv");
 		return src;
 	}
-	
 }

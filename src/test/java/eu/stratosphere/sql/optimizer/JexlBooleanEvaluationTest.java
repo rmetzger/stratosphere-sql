@@ -1,5 +1,6 @@
 package eu.stratosphere.sql.optimizer;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,8 +50,8 @@ public class JexlBooleanEvaluationTest {
 				+ "FROM tbl "
 				+ "WHERE ( (customerName = customerName ) AND ( customerId = 0 OR customerId = 3 OR customerId=3 ) AND (customerId = 0 AND customerId < 15)) OR (customerId = 16)";
 		
-		
-		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory();
+		File jsonDir = new File("src/main/resources/jsonSchemas/");
+		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory(jsonDir);
 		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
 		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
 			(RelOptRule) StratosphereProjectionRule.INSTANCE,

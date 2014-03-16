@@ -21,14 +21,15 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 	}
 
 	@Override
-	public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-		return new StratosphereSqlAggregation(getCluster(), traitSet, sole(inputs), getGroupSet(), getAggCallList());
+	public AggregateRelBase copy(RelTraitSet traitSet, RelNode input, BitSet groupSet, List<AggregateCall> aggCalls) {
+		return new StratosphereSqlAggregation(getCluster(), traitSet, input, groupSet, aggCalls);
 	}
-	
 
 	@Override
 	public Operator getStratosphereOperator() {
 		throw new RuntimeException("Impl StratOp");
 	}
+
+	
 
 }

@@ -38,10 +38,9 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	}
 	
 	@Override
-	public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
-		return new StratosphereSqlProjection(getCluster(), traitSet, sole(inputs), getChildExps(), getRowType(), getFlags());
+	public ProjectRelBase copy(RelTraitSet traitSet, RelNode input, List<RexNode> exps, RelDataType rowType) {
+		return new StratosphereSqlProjection(getCluster(), traitSet, input, exps, rowType, getFlags());
 	}
-	
 	
 
 	//
@@ -114,4 +113,6 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		}
 		return fields;
 	}
+
+	
 }
