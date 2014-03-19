@@ -39,19 +39,30 @@ import eu.stratosphere.types.Value;
 
 
 public class Launcher	{
-	private Launcher() { }
 	
-	public static Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
-		File jsonSchemaStoreDir = new File("src/main/resources/jsonSchemas/");
-		Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory(jsonSchemaStoreDir);
-		SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
-		StratosphereRuleSet ruleSets = new StratosphereRuleSet( ImmutableSet.of(
-			(RelOptRule) StratosphereProjectionRule.INSTANCE,
-			StratosphereFilterRule.INSTANCE,
-			StratosphereJoinRule.INSTANCE
-		));
+	private File defaultSchemaDir = new File("src/main/resources/jsonSchemas/");
+	private Function1<SchemaPlus, Schema> schemaFactory = new StratosphereSchemaFactory(defaultSchemaDir);
+	private SqlStdOperatorTable operatorTable = SqlStdOperatorTable.instance();
+	private StratosphereRuleSet ruleSets;
+	Planner planner;
+	
+	
+	final private static Launcher INSTANCE = new Launcher();
+	private Launcher() { 
+		ruleSets = new StratosphereRuleSet( ImmutableSet.of(
+					(RelOptRule) StratosphereProjectionRule.INSTANCE,
+					StratosphereFilterRule.INSTANCE,
+					StratosphereJoinRule.INSTANCE
+				));
+		planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
+	}
+	public static Launcher getInstance() {
+		return INSTANCE;
+	}
+	
+	
+	public Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
 		
-		Planner planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
 
 		System.err.println("Sql = "+sql);
 		SqlNode root = planner.parse(sql);
@@ -93,7 +104,8 @@ public class Launcher	{
 	}
 	
 	public static void main(String[] args) throws Exception {
-		Plan plan = convertSQLToPlan("SELECT customerName, customerId, customerId, customerId "
+		Launcher l = Launcher.getInstance();
+		Plan plan = l.convertSQLToPlan("SELECT customerName, customerId, customerId, customerId "
 				+ "FROM customer WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)");
 		LocalExecutor.execute(plan);
 		

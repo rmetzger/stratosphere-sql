@@ -28,10 +28,11 @@ public class StandardOptimizerTests {
 	@Test
 	public void executeQueries() {
 		String sql = null;
+		Launcher l = Launcher.getInstance();
 		try {
 			for(int i = 0; i < queries.length; i++) {
 				sql = queries[i];
-				Plan p = Launcher.convertSQLToPlan(sql);
+				Plan p = l.convertSQLToPlan(sql);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

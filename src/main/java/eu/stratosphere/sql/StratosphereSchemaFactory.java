@@ -16,7 +16,6 @@ public class StratosphereSchemaFactory implements Function1<SchemaPlus, Schema> 
 	public Schema apply(SchemaPlus incoming) {
 		Schema schema = new CsvSchema(incoming, "mySchema", jsonSchemaStoreDir);
 		return incoming.add(schema);
-
 	}
 
 }

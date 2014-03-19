@@ -6,11 +6,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import net.hydromatic.optiq.DataContext;
+import net.hydromatic.optiq.Schemas;
+
 import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexExecutorImpl;
 import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Pair;
@@ -82,10 +87,18 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
 		List<Map.Entry<Integer, ? extends Class<? extends Value>>> types = new ArrayList<Map.Entry<Integer, ? extends Class<? extends Value>>>();
 		Iterator<RexNode> it = exps.iterator();
+		
 		while(it.hasNext()) {
-			RexInputRef inputRef = (RexInputRef) it.next();
-			Pair<Integer, ? extends Class<? extends Value>> entry = new Pair(inputRef.getIndex(), StratosphereRelUtils.getTypeClass(inputRef.getType()));
-			types.add(entry);
+			RexNode node = it.next();
+			
+			final RexBuilder rexBuilder = getCluster().getRexBuilder();
+            DataContext dataContext = Schemas.createDataContext(statement.getConnection());
+            final RexExecutorImpl executor = new RexExecutorImpl(dataContext);
+            action.check(rexBuilder, executor);
+			
+//			RexInputRef inputRef = (RexInputRef) it.next();
+//			Pair<Integer, ? extends Class<? extends Value>> entry = new Pair(inputRef.getIndex(), StratosphereRelUtils.getTypeClass(inputRef.getType()));
+//			types.add(entry);
 		}
 	
 		// create MapOperator
