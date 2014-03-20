@@ -27,9 +27,8 @@ public class RexEvaluationTest {
 	
 	@Test
 	public void doIt() throws SqlParseException, ValidationException, RelConversionException {
-		String sql = "SELECT SUBSTRING('12345', 2) FROM tbl";
-		Plan p = Launcher.convertSQLToPlan(sql);
-		
-		
+		String sql = "SELECT SUBSTRING(customerName, 3) FROM tbl";
+		Launcher l = Launcher.getInstance();
+		l.convertSQLToPlan(sql);
 	}
 }

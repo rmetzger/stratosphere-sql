@@ -33,7 +33,7 @@ public class Driver extends UnregisteredDriver{
 //			return "org.apache.drill.jdbc.DrillJdbc40Factory";
 		case JDBC_41:
 		default:
-			return "org.apache.drill.jdbc.DrillJdbc41Factory";
+			return "net.hydromatic.optiq.jdbc.OptiqJdbc41Factory";
 		}
 	}
 //	@Override

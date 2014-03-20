@@ -21,6 +21,7 @@ import org.eigenbase.rex.RexNode;
 import org.eigenbase.util.Pair;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.MapFunction;
@@ -92,9 +93,20 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 			RexNode node = it.next();
 			
 			final RexBuilder rexBuilder = getCluster().getRexBuilder();
-            DataContext dataContext = Schemas.createDataContext(statement.getConnection());
+            DataContext dataContext = new FakeItDataContext();
             final RexExecutorImpl executor = new RexExecutorImpl(dataContext);
-            action.check(rexBuilder, executor);
+            List<RexNode> reducedValues = new ArrayList<RexNode>();
+            List<RexNode> inputExprs = new ArrayList<RexNode>();
+            inputExprs.add(node);
+            RelDataType type = getCluster().getTypeFactory().createJavaType(String.class);
+			rexBuilder.makeInputRef(type, 0);
+//			
+			executor.execute(rexBuilder, ImmutableList.<RexNode>copyOf(inputExprs),
+                    reducedValues);
+			
+			for(RexNode r : reducedValues) {
+				System.err.println("Rex node "+r);
+			}
 			
 //			RexInputRef inputRef = (RexInputRef) it.next();
 //			Pair<Integer, ? extends Class<? extends Value>> entry = new Pair(inputRef.getIndex(), StratosphereRelUtils.getTypeClass(inputRef.getType()));
