@@ -34,6 +34,7 @@ import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexNode;
 import org.eigenbase.rex.RexVisitor;
 import org.eigenbase.rex.RexVisitorImpl;
+import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.Pair;
 
 import com.google.common.base.Preconditions;
@@ -90,7 +91,9 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		public int positionInOutput;
 		public int positionInRex;
 		public int fieldIndex;
+		public boolean trivialProjection; // projection that does not need to execute generated code.
 		public String name;
+		
 		
 		@Override
 		public String toString() {
@@ -98,7 +101,9 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 					+ "positionInInput="+positionInInput+", "
 					+ "positionInOutput="+positionInOutput+", "
 					+ "positionInRex="+positionInRex+", "
-					+ "fieldIndex="+fieldIndex+" name="+name+"]";
+					+ "fieldIndex="+fieldIndex+", "
+					+ "trivialProjection="+trivialProjection+", "
+					+ "name="+name+"]";
 		}
 		@Override
 		public int hashCode() {
@@ -107,6 +112,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 			hash.append(positionInOutput);
 			hash.append(positionInRex);
 			hash.append(fieldIndex);
+			hash.append(trivialProjection);
 			return hash.toHashCode();
 		}
 		
@@ -117,7 +123,8 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 				return other.positionInInput == positionInInput &&
 						other.positionInOutput == positionInOutput &&
 						other.positionInRex == positionInRex &&
-						other.fieldIndex == fieldIndex;
+						other.fieldIndex == fieldIndex &&
+						other.trivialProjection == trivialProjection;
 			}
 			return false;
 		}
@@ -132,17 +139,27 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		private transient Function1<DataContext, Object[]> function;
 		private Set<ProjectionFieldProperties> fields;
 		Map<String, byte[]> map = new HashMap<String, byte[]>();
+		private boolean isTrivial = true; // all fields are projected trivially (no codgen)
 		
 		public StratosphereSqlProjectionMapOperator(Function1<DataContext, Object[]> function,
 				Set<ProjectionFieldProperties> fields, String sourceCode) {
 			this.function = function;
 			this.fields = fields;
-			String newSrc = "public class "+RexExecutable.GENERATED_CLASS_NAME+" "
-					+ "implements net.hydromatic.linq4j.function.Function1, java.io.Serializable { "+sourceCode+" }";
-			try {
-				map.put(RexExecutable.GENERATED_CLASS_NAME+".java", newSrc.getBytes("UTF-8"));
-			} catch (UnsupportedEncodingException e) {
-				throw new RuntimeException("Error while encoding the generated source", e);
+			for(ProjectionFieldProperties f: fields) {
+				if(f.trivialProjection) {
+					continue;
+				}
+				isTrivial = false;
+				break;
+			}
+			if(!isTrivial) {
+				String newSrc = "public class "+RexExecutable.GENERATED_CLASS_NAME+" "
+						+ "implements net.hydromatic.linq4j.function.Function1, java.io.Serializable { "+sourceCode+" }";
+				try {
+					map.put(RexExecutable.GENERATED_CLASS_NAME+".java", newSrc.getBytes("UTF-8"));
+				} catch (UnsupportedEncodingException e) {
+					throw new RuntimeException("Error while encoding the generated source", e);
+				}
 			}
 			
 		}
@@ -162,47 +179,75 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	    private void readObject(java.io.ObjectInputStream stream)
 	            throws IOException, ClassNotFoundException {
 	    	stream.defaultReadObject();
-	    	
-	    	// initialize generated code.
-			ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
-			ResourceFinder srcFinder = new MapResourceFinder(map);
-			JavaSourceClassLoader janinoClassLoader = new JavaSourceClassLoader(currentClassLoader, srcFinder, "UTF-8");
-			Thread.currentThread().setContextClassLoader(janinoClassLoader);
-			Class<Function1> gen = (Class<Function1>) Class.forName(RexExecutable.GENERATED_CLASS_NAME, true, janinoClassLoader);
-	    	function = InstantiationUtil.instantiate(gen, Function1.class);
+	    	if(!isTrivial) {
+		    	// initialize generated code.
+				ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+				ResourceFinder srcFinder = new MapResourceFinder(map);
+				JavaSourceClassLoader janinoClassLoader = new JavaSourceClassLoader(currentClassLoader, srcFinder, "UTF-8");
+				Thread.currentThread().setContextClassLoader(janinoClassLoader);
+				Class<Function1> gen = (Class<Function1>) Class.forName(RexExecutable.GENERATED_CLASS_NAME, true, janinoClassLoader);
+		    	function = InstantiationUtil.instantiate(gen, Function1.class);
+	    	}
 	    }
 		
+	    // map operator fields
+	    private transient Value[] valuesCache;
 
 		@Override
 		public void map(Record record, Collector<Record> out) throws Exception {
 			outRec.clear();
-			Map<String, Object> map = new HashMap();
-			DataContext dataContext = new FakeItDataContext(map);
-			int i = 0;
-			Value[] val = new Value[fields.size()];
-			for(ProjectionFieldProperties field: fields) {
-				field.fieldIndex = i;
-				if(val[i] == null) {
-					val[i] = ReflectionUtil.newInstance(field.fieldType);
+			if(isTrivial) {
+				if(valuesCache == null) {
+					valuesCache = new Value[fields.size()];
 				}
-				record.getFieldInto(field.positionInInput, val[i]);
-				map.put("?"+field.positionInInput, ((JavaValue) val[i]).getObjectValue()); // was positionInRex.
-				i++;
+				for(ProjectionFieldProperties field: fields) {
+					if(valuesCache[field.positionInRex] == null) {
+						valuesCache[field.positionInRex] = ReflectionUtil.newInstance(field.fieldType);
+					}
+					record.getFieldInto(field.positionInInput, valuesCache[field.positionInRex]);
+					outRec.setField(field.positionInOutput, valuesCache[field.positionInRex]);
+				}
+				System.err.println("Collecting "+outRec);
+				out.collect(outRec);
+			} else {
+				Map<String, Object> map = new HashMap<String, Object>();
+				DataContext dataContext = new FakeItDataContext(map);
+				int i = 0;
+				Value[] val = new Value[fields.size()];
+				for(ProjectionFieldProperties field: fields) {
+					if(field.trivialProjection) {
+						val[field.fieldIndex] = ReflectionUtil.newInstance(field.fieldType);
+						record.getFieldInto(field.positionInInput, val[field.fieldIndex]);
+						outRec.setField(field.positionInOutput, val[field.fieldIndex]);
+						System.err.println("Copying here since trivial "+field);
+						continue;
+					}
+				//	field.fieldIndex = i;
+					if(val[field.fieldIndex] == null) {
+						val[field.fieldIndex] = ReflectionUtil.newInstance(field.fieldType);
+					}
+					record.getFieldInto(field.positionInInput, val[field.fieldIndex]);
+					map.put("?"+field.positionInInput, ((JavaValue) val[field.fieldIndex]).getObjectValue()); // was positionInRex.
+					i++;
+				}
+				
+				// call generated code
+		        Object[] result = function.apply(dataContext);
+		        for(Object o : result) {
+		        	System.err.println("result = "+o);
+		        }
+		        for(ProjectionFieldProperties field: fields) {
+		        	if(field.trivialProjection) {
+		        		continue;
+		        	}
+		        	// set result into Value.
+		        	((JavaValue) val[field.fieldIndex]).setObjectValue(result[field.positionInRex]);
+		        	outRec.setField(field.positionInOutput, val[field.fieldIndex]);
+		        	System.err.println("Setting "+val[field.fieldIndex]+" as defined in "+field);
+		        }
+		        System.err.println("Collecting "+outRec);
+				out.collect(outRec);
 			}
-			
-			// call generated code
-	        Object[] result = function.apply(dataContext);
-	        for(Object o : result) {
-	        	System.err.println("result = "+o);
-	        }
-	        for(ProjectionFieldProperties field: fields) {
-	        	// set result into Value.
-	        	((JavaValue) val[field.fieldIndex]).setObjectValue(result[field.positionInRex]);
-	        	outRec.setField(field.positionInOutput, val[field.fieldIndex]);
-	        	System.err.println("Setting "+val[field.fieldIndex]+" as defined in "+field);
-	        }
-	        System.err.println("Collecting "+outRec);
-			out.collect(outRec);
 		}
 		
 	}
@@ -225,16 +270,18 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
         
         Set<ProjectionFieldProperties> fields = new HashSet<ProjectionFieldProperties>();
         int pos = 0;
+        int rexpos = 0;
         for(RexNode rex : localExps) {
         	rex.accept(replaceInputRefsByExternalInputRefsVisitor);
-        	
+        	boolean trivialProjection = rex.getKind() == SqlKind.INPUT_REF;
         	for(Pair<Integer, RelDataType> rexInput : replaceInputRefsByExternalInputRefsVisitor.getInputPosAndType() ) {
 	        	ProjectionFieldProperties field = new ProjectionFieldProperties();
 	        	field.positionInOutput = pos;
 	        	field.fieldIndex = pos;
-	        	field.positionInRex = pos;
+	        	field.positionInRex = rexpos;
 	        	field.positionInInput = rexInput.getKey();
 	        	field.fieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
+	        	field.trivialProjection = trivialProjection;
 	        	if(fields.add(field)) {
 	        		System.err.println("adding projection field="+field+" for rex="+rex);
 	        	} else {
@@ -243,6 +290,9 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	        	field.name = rex.toString();
         	}
         	pos++;
+        	if(!trivialProjection) {
+        		rexpos++;
+        	}
         	replaceInputRefsByExternalInputRefsVisitor.resetInputList();
         }
       //  if(localExps.size() > 1 && !(localExps.get(0) instanceof RexInputRef)) {

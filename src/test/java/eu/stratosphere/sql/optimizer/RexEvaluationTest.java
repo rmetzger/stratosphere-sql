@@ -44,10 +44,29 @@ public class RexEvaluationTest {
 	 * Test if the fast shortcut without calling generated code is also working.
 	 */
 	@Test
-	public void noEval() {
+	public void trivialProj() {
 		SqlTestResult result = test.execute("SELECT depName FROM departments");
 		result.expectRowcount(3);
 		result.expectColumn(0, ImmutableList.of("Sales", "Marketing", "Accounts") );
+	}
+	
+	@Test
+	public void trivialMulti() {
+		SqlTestResult result = test.execute("SELECT depName, depName, depName FROM departments");
+		result.expectRowcount(3);
+		ImmutableList<String> exp = ImmutableList.of("Sales", "Marketing", "Accounts");
+		result.expectColumn(0, exp);
+		result.expectColumn(1, exp);
+		result.expectColumn(2, exp);
+	}
+	
+	@Test
+	public void someTrivial() {
+		SqlTestResult result = test.execute("SELECT depName, depName, UPPER(depName) FROM departments");
+		result.expectRowcount(3);
+		result.expectColumn(0, ImmutableList.of("Sales", "Marketing", "Accounts"));
+		result.expectColumn(1, ImmutableList.of("Sales", "Marketing", "Accounts"));
+		result.expectColumn(2, ImmutableList.of("SALES", "MARKETING", "ACCOUNTS"));
 	}
 	
 	@Test
