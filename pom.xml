@@ -94,6 +94,11 @@
 			<!-- Version 11.0.2 is possible (Hadoop uses it); 16.0 is preferred. -->
 			<version>[11.0.2,]</version>
 		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.6</version>
+		</dependency>
 	</dependencies>
 
 

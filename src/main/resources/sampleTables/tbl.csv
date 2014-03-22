@@ -1,4 +1,3 @@
-DEPTNO:int,NAME:string
-10,"Sales"
-20,"Marketing"
-30,"Accounts"
+10,Sales
+20,Marketing
+30,Accounts

@@ -7,15 +7,18 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.Schemas;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.codehaus.janino.JavaSourceClassLoader;
 import org.codehaus.janino.util.resource.MapResourceFinder;
 import org.codehaus.janino.util.resource.ResourceFinder;
@@ -81,28 +84,60 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	// 
 	
 	public static class ProjectionFieldProperties implements Serializable {
+		private static final long serialVersionUID = 1L;
 		public Class<? extends Value> fieldType;
 		public int positionInInput;
 		public int positionInOutput;
 		public int positionInRex;
 		public int fieldIndex;
+		
+		@Override
+		public String toString() {
+			return "[ProjectionFieldProperties: fieldType="+fieldType+", "
+					+ "positionInInput="+positionInInput+", "
+					+ "positionInOutput="+positionInOutput+", "
+					+ "positionInRex="+positionInRex+", "
+					+ "fieldIndex="+fieldIndex+"]";
+		}
+		@Override
+		public int hashCode() {
+			HashCodeBuilder hash = new HashCodeBuilder();
+			hash.append(positionInInput);
+			hash.append(positionInOutput);
+			hash.append(positionInRex);
+			hash.append(fieldIndex);
+			return hash.toHashCode();
+		}
+		
+		
+		public boolean equals(Object obj) {
+			if(obj instanceof ProjectionFieldProperties) {
+				ProjectionFieldProperties other = (ProjectionFieldProperties) obj;
+				return other.positionInInput == positionInInput &&
+						other.positionInOutput == positionInOutput &&
+						other.positionInRex == positionInRex &&
+						other.fieldIndex == fieldIndex;
+			}
+			return false;
+		}
 	}
 	
 	/**
-	 * Simply pass the record through.
+	 * Pass the records through and run Rex against them, if required.
 	 */
 	public static class StratosphereSqlProjectionMapOperator extends MapFunction {
 		private static final long serialVersionUID = 1L;
 		private Record outRec = new Record();
 		private transient Function1<DataContext, Object[]> function;
-		List<ProjectionFieldProperties> fields;
+		private Set<ProjectionFieldProperties> fields;
 		Map<String, byte[]> map = new HashMap<String, byte[]>();
 		
 		public StratosphereSqlProjectionMapOperator(Function1<DataContext, Object[]> function,
-				List<ProjectionFieldProperties> fields, String sourceCode) {
+				Set<ProjectionFieldProperties> fields, String sourceCode) {
 			this.function = function;
 			this.fields = fields;
-			String newSrc = "public class "+RexExecutable.GENERATED_CLASS_NAME+" implements net.hydromatic.linq4j.function.Function1, java.io.Serializable { "+sourceCode+" }";
+			String newSrc = "public class "+RexExecutable.GENERATED_CLASS_NAME+" "
+					+ "implements net.hydromatic.linq4j.function.Function1, java.io.Serializable { "+sourceCode+" }";
 			try {
 				map.put(RexExecutable.GENERATED_CLASS_NAME+".java", newSrc.getBytes("UTF-8"));
 			} catch (UnsupportedEncodingException e) {
@@ -150,7 +185,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 					val[i] = ReflectionUtil.newInstance(field.fieldType);
 				}
 				record.getFieldInto(field.positionInInput, val[i]);
-				map.put("?"+field.positionInRex, ((JavaValue) val[i]).getObjectValue());
+				map.put("?"+field.positionInInput, ((JavaValue) val[i]).getObjectValue()); // was positionInRex.
 				i++;
 			}
 			
@@ -164,7 +199,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	        	((JavaValue) val[field.fieldIndex]).setObjectValue(result[field.fieldIndex]);
 	        	outRec.setField(field.positionInOutput, val[field.fieldIndex]);
 	        }
-	        
+	        System.err.println("Collecting "+outRec);
 			out.collect(outRec);
 		}
 		
@@ -182,16 +217,30 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
         final RexExecutorImpl executor = new RexExecutorImpl();
         
         ImmutableList<RexNode> localExps = ImmutableList.copyOf(exps);
-        RexVisitor<Void> replaceInputRefsByExternalInputRefsVisitor = new ReplaceInputRefVisitor();
-        for(RexNode node : localExps) {
-        	// set external variables
-        	node.accept(replaceInputRefsByExternalInputRefsVisitor);
-        }
         
+        ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new ReplaceInputRefVisitor();
+        
+        
+        Set<ProjectionFieldProperties> fields = new HashSet<ProjectionFieldProperties>();
+        int pos = 0;
+        for(RexNode rex : localExps) {
+        	rex.accept(replaceInputRefsByExternalInputRefsVisitor);
+        	
+        	for(Pair<Integer, RelDataType> rexInput : replaceInputRefsByExternalInputRefsVisitor.getInputPosAndType() ) {
+	        	ProjectionFieldProperties field = new ProjectionFieldProperties();
+	        	field.positionInOutput = pos;
+	        	field.fieldIndex = pos;
+	        	field.positionInInput = rexInput.getKey();
+	        	field.fieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
+	        	fields.add(field);
+	        	System.err.println("adding projection field "+field);
+        	}
+        	pos++;
+        	replaceInputRefsByExternalInputRefsVisitor.resetInputList();
+        }
+        // has to be called after ReplaceInputRefVisitor shuttle went over tree to ensure "external" flag on InputRef
         RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
         
-        List<ProjectionFieldProperties> fields = new ArrayList<ProjectionFieldProperties>();
-	
 		// create MapOperator
 		MapOperator proj = MapOperator	.builder(new StratosphereSqlProjectionMapOperator(executable.getFunction(),
 																						fields, executable.getSource()))
@@ -202,16 +251,28 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	}
 	
 	  private class ReplaceInputRefVisitor extends RexVisitorImpl<Void> {
+		private List<Pair<Integer, RelDataType>> inputPosAndType = new ArrayList<Pair<Integer, RelDataType>>();
 	    public ReplaceInputRefVisitor() {
 	      super(true);
+	      
 	    }
 
 	    public Void visitInputRef(RexInputRef inputRef) {
-	      if(true) {
+	      if(true) { // do I need a condition here?
 	    	  inputRef.setExternalRef(true);
 	      }
+	      System.err.println("Setting input ref "+inputRef+" index "+inputRef.getIndex());
+	      inputPosAndType.add(Pair.of(inputRef.getIndex(), inputRef.getType()));
 	      return null;
 	    }
+	    public void resetInputList() {
+	    	inputPosAndType.clear();
+	    }
+	    
+	    public List<Pair<Integer, RelDataType>> getInputPosAndType() {
+	    	return inputPosAndType;
+	    }
+	    
 	  }
 
 	private String buildName() {
