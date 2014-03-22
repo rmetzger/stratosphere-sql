@@ -2,11 +2,14 @@ package eu.stratosphere.sql;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Map.Entry;
 
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.jdbc.ConnectionConfig.Lex;
+import net.hydromatic.optiq.config.Lex;
 import net.hydromatic.optiq.tools.Frameworks;
 import net.hydromatic.optiq.tools.Planner;
 import net.hydromatic.optiq.tools.RelConversionException;
@@ -24,7 +27,10 @@ import org.eigenbase.sql.parser.SqlParseException;
 import com.google.common.collect.ImmutableSet;
 
 import eu.stratosphere.api.common.Plan;
+import eu.stratosphere.api.common.io.CollectionOutputFormat;
+import eu.stratosphere.api.common.operators.AbstractUdfOperator;
 import eu.stratosphere.api.common.operators.FileDataSink;
+import eu.stratosphere.api.common.operators.GenericDataSink;
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.client.LocalExecutor;
@@ -34,6 +40,7 @@ import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereJoinRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
+import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
 
 
@@ -60,26 +67,17 @@ public class Launcher	{
 		return INSTANCE;
 	}
 	
-	
-	public Plan convertSQLToPlan(String sql) throws SqlParseException, ValidationException, RelConversionException {
-		
-
+	public Operator convertToOperator(String sql) throws SqlParseException, ValidationException, RelConversionException {
 		System.err.println("Sql = "+sql);
 		SqlNode root = planner.parse(sql);
 		SqlNode validated = planner.validate(root);
 		RelNode rel = planner.convert(validated);
 		
 		// print out logical tree
-		System.err.println("Got rel = "+rel);
 		PrintWriter p = new PrintWriter(System.out);
 		RelWriter pw = new RelWriterImpl(p, SqlExplainLevel.ALL_ATTRIBUTES, true);
 		rel.explain(pw);
 		
-		// set high debugging level for optimizer
-//		EigenbaseTrace.getPlannerTracer().setLevel(Level.ALL);
-// 			ConsoleHandler handler = new ConsoleHandler();
-//		handler.setLevel(Level.ALL);
-//		EigenbaseTrace.getPlannerTracer().addHandler(handler);
 		
 		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet().plus(StratosphereRel.CONVENTION), rel);
 		
@@ -92,15 +90,39 @@ public class Launcher	{
 			StratosphereSqlProjection stratoProj = ((StratosphereSqlProjection) convertedRelNode);
 			
 			stratoRoot = stratoProj.getStratosphereOperator();
-			System.err.println("Strato Root Op "+ stratoRoot);
-			Class<? extends Value>[] fields = stratoProj.getFields();
-			FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file://"+ System.getProperty("user.dir")+"//simple.out", stratoRoot, "Sql Result");
-			plan = new Plan(out, "Stratosphere SQL: "+sql);
+			return stratoRoot;
 		}
-		if(plan == null) {
-			throw new RuntimeException("Sql Conversion failed!");
+		throw new RuntimeException("Fix me, its obvious");
+	}
+	// smallest Java class ever.
+	public static class Pair<K,V> { public K k; public V v; }
+	
+	public Pair<Plan, Collection<Record>> convertToPlanWithCollection(String sql) {
+		Operator stratoRoot;
+		try {
+			stratoRoot = convertToOperator(sql);
+		} catch (Exception e) {
+			throw new RuntimeException("Some Sql exception ", e);
 		}
-		return plan;
+		
+		System.err.println("Strato Root Op "+ stratoRoot);
+		//Class<? extends Value>[] fields = stratoProj.getFields();
+	//	FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file://"+ System.getProperty("user.dir")+"//simple.out", stratoRoot, "Sql Result");
+		Collection<Record> coll = new LinkedList<Record>();
+		CollectionOutputFormat collOut = new CollectionOutputFormat(coll);
+		GenericDataSink out = new GenericDataSink(collOut);
+		out.setInput(stratoRoot);
+		out.setDegreeOfParallelism(1);
+		Plan plan = new Plan(out, "Stratosphere SQL. Query: "+sql);
+		Pair<Plan, Collection<Record>> p = new Pair<Plan, Collection<Record>>();
+		p.k = plan;
+		p.v = coll;
+		return p;
+	}
+	
+	public Plan convertSQLToPlan(String sql)  {
+		// I'm a bit sorry for this code
+		return convertToPlanWithCollection(sql).k;
 	}
 	
 	public static void main(String[] args) throws Exception {

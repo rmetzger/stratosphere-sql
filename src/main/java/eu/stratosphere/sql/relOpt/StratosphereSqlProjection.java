@@ -1,6 +1,7 @@
 package eu.stratosphere.sql.relOpt;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -15,9 +16,12 @@ import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexExecutable;
 import org.eigenbase.rex.RexExecutorImpl;
 import org.eigenbase.rex.RexInputRef;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.rex.RexVisitor;
+import org.eigenbase.rex.RexVisitorImpl;
 import org.eigenbase.util.Pair;
 
 import com.google.common.base.Preconditions;
@@ -93,16 +97,27 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 			RexNode node = it.next();
 			
 			final RexBuilder rexBuilder = getCluster().getRexBuilder();
-            DataContext dataContext = new FakeItDataContext();
-            final RexExecutorImpl executor = new RexExecutorImpl(dataContext);
+            Map<String, Object> map = new HashMap();
+            map.put("?1", "Fucker");
+			DataContext dataContext = new FakeItDataContext(map);
+            final RexExecutorImpl executor = new RexExecutorImpl();
             List<RexNode> reducedValues = new ArrayList<RexNode>();
             List<RexNode> inputExprs = new ArrayList<RexNode>();
             inputExprs.add(node);
-            RelDataType type = getCluster().getTypeFactory().createJavaType(String.class);
-			rexBuilder.makeInputRef(type, 0);
+          
+			//  RelDataType type = getCluster().getTypeFactory().createJavaType(String.class);
+		//	rexBuilder.makeInputRef(type, 0);
 //			
-			executor.execute(rexBuilder, ImmutableList.<RexNode>copyOf(inputExprs),
-                    reducedValues);
+            RexVisitor<Void> replaceInputRefsByExternalInputRefsVisitor = new ReplaceInputRefVisitor();
+            node.accept(replaceInputRefsByExternalInputRefsVisitor);
+            RexExecutable executable = executor.createExecutable(rexBuilder, inputExprs);
+            executable.setDataContext(dataContext);
+            Object[] result = executable.execute();
+            for(Object o : result) {
+            	System.err.println("result = "+o);
+            }
+		//	executor.execute(rexBuilder, ImmutableList.<RexNode>copyOf(inputExprs),
+          //          reducedValues);
 			
 			for(RexNode r : reducedValues) {
 				System.err.println("Rex node "+r);
@@ -120,6 +135,19 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 										.build();
 		return proj;
 	}
+	
+	  private class ReplaceInputRefVisitor extends RexVisitorImpl<Void> {
+	    public ReplaceInputRefVisitor() {
+	      super(true);
+	    }
+
+	    public Void visitInputRef(RexInputRef inputRef) {
+	      if(true) {
+	    	  inputRef.setExternalRef(true);
+	      }
+	      return null;
+	    }
+	  }
 
 	private String buildName() {
 		return "Project "+getRowType().toString();

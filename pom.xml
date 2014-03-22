@@ -48,7 +48,7 @@
 		<dependency>
 			<groupId>net.hydromatic</groupId>
 			<artifactId>optiq-core</artifactId>
-			<version>0.5</version>
+			<version>0.6-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sf.opencsv</groupId>
@@ -87,6 +87,12 @@
 			<groupId>org.codehaus.jackson</groupId>
 			<artifactId>jackson-core-asl</artifactId>
 			<version>1.9.13</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<!-- Version 11.0.2 is possible (Hadoop uses it); 16.0 is preferred. -->
+			<version>[11.0.2,]</version>
 		</dependency>
 	</dependencies>
 

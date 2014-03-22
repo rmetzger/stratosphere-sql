@@ -39,6 +39,13 @@ public class StratosphereRelUtils {
 		}
 		throw new RuntimeException("Unsupported type "+type);
 	}
+
+	public static Class<? extends Value> getTypeClass(Class clazz) {
+		if(clazz == String.class) {
+			return StringValue.class;
+		}
+		throw new RuntimeException("Unsupported class "+clazz);
+	}
 	
 	public static Operator openSingleInputOperator(List<RelNode> optiqInput) {
 		Operator inputOp = null;
@@ -133,5 +140,6 @@ public class StratosphereRelUtils {
 			return;
 		}
 	}
+
 	
 }

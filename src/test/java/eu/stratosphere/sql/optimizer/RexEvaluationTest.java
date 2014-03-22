@@ -7,8 +7,10 @@ import org.apache.commons.jexl2.JexlEngine;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.junit.Test;
 
-import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.sql.Launcher;
+import com.google.common.collect.ImmutableSet;
+
+import eu.stratosphere.sql.optimizer.SqlTest.SqlTestResult;
+import eu.stratosphere.sql.optimizer.SqlTest.SqlTestTable;
 
 /**
  * Test Rex evaluation using Optiq-based code gen.
@@ -27,8 +29,12 @@ public class RexEvaluationTest {
 	
 	@Test
 	public void doIt() throws SqlParseException, ValidationException, RelConversionException {
-		String sql = "SELECT SUBSTRING(customerName, 3) FROM tbl";
-		Launcher l = Launcher.getInstance();
-		l.convertSQLToPlan(sql);
+		SqlTest test = new SqlTest(SqlTestTable.Tbl);
+		SqlTestResult result = test.execute("SELECT SUBSTRING(customerName FROM 1 FOR 2) FROM tbl");
+		result.expectRow(2, ImmutableSet.of("Sa", "Ma", "Ac") );
+		
+//		String sql = "SELECT SUBSTRING(customerName FROM 1 FOR 2) FROM tbl";
+//		Launcher l = Launcher.getInstance();
+//		l.convertSQLToPlan(sql);
 	}
 }
