@@ -86,7 +86,8 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	
 	public static class ProjectionFieldProperties implements Serializable {
 		private static final long serialVersionUID = 1L;
-		public Class<? extends Value> fieldType;
+		public Class<? extends Value> inFieldType;
+		public Class<? extends Value> outFieldType;
 		public int positionInInput;
 		public int positionInOutput;
 		public int positionInRex;
@@ -97,7 +98,8 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		
 		@Override
 		public String toString() {
-			return "[ProjectionFieldProperties: fieldType="+fieldType+", "
+			return "[ProjectionFieldProperties: inFieldType="+inFieldType+", "
+					+ "outFieldType="+outFieldType+", "
 					+ "positionInInput="+positionInInput+", "
 					+ "positionInOutput="+positionInOutput+", "
 					+ "positionInRex="+positionInRex+", "
@@ -202,7 +204,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 				}
 				for(ProjectionFieldProperties field: fields) {
 					if(valuesCache[field.positionInRex] == null) {
-						valuesCache[field.positionInRex] = ReflectionUtil.newInstance(field.fieldType);
+						valuesCache[field.positionInRex] = ReflectionUtil.newInstance(field.inFieldType);
 					}
 					record.getFieldInto(field.positionInInput, valuesCache[field.positionInRex]);
 					outRec.setField(field.positionInOutput, valuesCache[field.positionInRex]);
@@ -216,15 +218,14 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 				Value[] val = new Value[fields.size()];
 				for(ProjectionFieldProperties field: fields) {
 					if(field.trivialProjection) {
-						val[field.fieldIndex] = ReflectionUtil.newInstance(field.fieldType);
+						val[field.fieldIndex] = ReflectionUtil.newInstance(field.inFieldType);
 						record.getFieldInto(field.positionInInput, val[field.fieldIndex]);
 						outRec.setField(field.positionInOutput, val[field.fieldIndex]);
 						System.err.println("Copying here since trivial "+field);
 						continue;
 					}
-				//	field.fieldIndex = i;
 					if(val[field.fieldIndex] == null) {
-						val[field.fieldIndex] = ReflectionUtil.newInstance(field.fieldType);
+						val[field.fieldIndex] = ReflectionUtil.newInstance(field.inFieldType);
 					}
 					record.getFieldInto(field.positionInInput, val[field.fieldIndex]);
 					map.put("?"+field.positionInInput, ((JavaValue) val[field.fieldIndex]).getObjectValue()); // was positionInRex.
@@ -239,6 +240,9 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		        for(ProjectionFieldProperties field: fields) {
 		        	if(field.trivialProjection) {
 		        		continue;
+		        	}
+		        	if(field.inFieldType != field.outFieldType) {
+		        		val[field.fieldIndex] = ReflectionUtil.newInstance(field.outFieldType);
 		        	}
 		        	// set result into Value.
 		        	((JavaValue) val[field.fieldIndex]).setObjectValue(result[field.positionInRex]);
@@ -267,7 +271,6 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
         
         ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new ReplaceInputRefVisitor();
         
-        
         Set<ProjectionFieldProperties> fields = new HashSet<ProjectionFieldProperties>();
         int pos = 0;
         int rexpos = 0;
@@ -280,7 +283,8 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	        	field.fieldIndex = pos;
 	        	field.positionInRex = rexpos;
 	        	field.positionInInput = rexInput.getKey();
-	        	field.fieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
+	        	field.inFieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
+	        	field.outFieldType = StratosphereRelUtils.getTypeClass( getRowType().getFieldList().get(pos).getType() );
 	        	field.trivialProjection = trivialProjection;
 	        	if(fields.add(field)) {
 	        		System.err.println("adding projection field="+field+" for rex="+rex);

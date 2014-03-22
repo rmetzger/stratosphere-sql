@@ -82,22 +82,13 @@ public class SqlTest {
 		 */
 		public void expectRow(int rowId, List<?> elements) {
 			List<?> copy = ImmutableList.copyOf(elements);
-			Class firstType = null;
-			for(Object o : elements) {
-				if(firstType == null) {
-					firstType = o.getClass();
-					break;
-				}
-				if(o.getClass() != firstType) {
-					throw new RuntimeException("All elements in the expected set have to have the same type");
-				}
-			}
-			Class<? extends Value> stratosphereType = StratosphereRelUtils.getTypeClass(firstType);
+			
 			Record r = result.get(rowId);
 			for(int i = 0; i < r.getNumFields(); i++) {
+				Class<? extends Value> stratosphereType = StratosphereRelUtils.getTypeClass( copy.get(i).getClass() );
 				Value resultVal = r.getField(i, stratosphereType);
 				Object java =  ( (JavaValue) resultVal).getObjectValue();
-				Assert.assertEquals("Returned types to not match", java.getClass(), firstType);
+				// Assert.assertEquals("Returned types to not match", java.getClass(), stratosphereType);
 				Assert.assertEquals("Values not equal", copy.get(i), java);
 			}
 		}

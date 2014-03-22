@@ -39,6 +39,8 @@ public class RexEvaluationTest {
 	//
 	// The Rex' below are evaluated in the projection operator
 	//
+	// -- String Functions --
+	//
 	
 	/**
 	 * Test if the fast shortcut without calling generated code is also working.
@@ -119,5 +121,28 @@ public class RexEvaluationTest {
 		result.expectRow(0, ImmutableList.of("Sales is managed by John" ));
 		result.expectRow(1, ImmutableList.of("Marketing is managed by Pete"));
 		result.expectRow(2, ImmutableList.of("Accounts is managed by Claus"));
+	}
+	
+	//
+	// -- Integer Functions --
+	//
+	@Test
+	public void multiply() {
+		SqlTestResult result = test.execute("SELECT depName, depNo, 10*depNo FROM departments");
+		result.expectRowcount(3);
+		result.expectRow(0, ImmutableList.of("Sales",10, 100 ));
+		result.expectRow(1, ImmutableList.of("Marketing", 20, 200));
+		result.expectRow(2, ImmutableList.of("Accounts", 30, 300));
+	}
+	
+	//
+	// -- Integer and Double Functions --
+	//
+	@Test
+	public void power() {
+		SqlTestResult result = test.execute("SELECT depName, depNo, POWER(depNo, 2) FROM departments");
+		result.expectRow(0, ImmutableList.of("Sales",10, 100.0d ));
+		result.expectRow(1, ImmutableList.of("Marketing", 20, 400.0d));
+		result.expectRow(2, ImmutableList.of("Accounts", 30, 900.0d));
 	}
 }

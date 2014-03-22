@@ -13,6 +13,7 @@ import org.eigenbase.sql.type.SqlTypeName;
 
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.sql.StratosphereSQLException;
+import eu.stratosphere.types.DoubleValue;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
@@ -37,12 +38,21 @@ public class StratosphereRelUtils {
 		if(type.getSqlTypeName() == SqlTypeName.VARCHAR) {
 			return StringValue.class;
 		}
-		throw new RuntimeException("Unsupported type "+type);
+		if(type.getSqlTypeName() == SqlTypeName.DOUBLE) {
+			return DoubleValue.class;
+		}
+ 		throw new RuntimeException("Unsupported type "+type);
 	}
 
 	public static Class<? extends Value> getTypeClass(Class clazz) {
 		if(clazz == String.class) {
 			return StringValue.class;
+		}
+		if(clazz == Integer.class) {
+			return IntValue.class;
+		}
+		if(clazz == Double.class) {
+			return DoubleValue.class;
 		}
 		throw new RuntimeException("Unsupported class "+clazz);
 	}
