@@ -136,4 +136,13 @@ public class SqlTest {
 		}
 		return new SqlTestResult();
 	}
+	
+	public void close() {
+		try {
+			stratosphereExecutor.stop();
+		} catch (Exception e) {
+			throw new RuntimeException("Problem shutting down the LocalExecutor", e);
+		}
+		stratosphereExecutor = null;
+	}
 }

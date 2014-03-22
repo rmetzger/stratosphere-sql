@@ -1,6 +1,9 @@
 package eu.stratosphere.sql.optimizer;
 
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -16,10 +19,21 @@ import eu.stratosphere.sql.optimizer.SqlTest.SqlTestTable;
  *
  */
 public class RexEvaluationTest {
-	private SqlTest test;
-	@Before
-	public void prepare() {
-		test = new SqlTest(SqlTestTable.Tbl);
+	private static SqlTest test;
+	private Object monitor = new Object();
+
+	
+	@Before public void start() {
+		synchronized (monitor) {
+			test = new SqlTest(SqlTestTable.Tbl);
+		}
+		
+	}
+	@After public void stop() {
+		synchronized (monitor) {
+			test.close();
+			test = new SqlTest(SqlTestTable.Tbl);
+		}
 	}
 	
 	//

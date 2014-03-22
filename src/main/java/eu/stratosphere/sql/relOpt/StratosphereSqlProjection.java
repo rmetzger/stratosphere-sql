@@ -245,8 +245,10 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
         	pos++;
         	replaceInputRefsByExternalInputRefsVisitor.resetInputList();
         }
-        // has to be called after ReplaceInputRefVisitor shuttle went over tree to ensure "external" flag on InputRef
-        RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
+      //  if(localExps.size() > 1 && !(localExps.get(0) instanceof RexInputRef)) {
+	        // has to be called after ReplaceInputRefVisitor shuttle went over tree to ensure "external" flag on InputRef
+	        RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
+      //  }
         
 		// create MapOperator
 		MapOperator proj = MapOperator	.builder(new StratosphereSqlProjectionMapOperator(executable.getFunction(),
