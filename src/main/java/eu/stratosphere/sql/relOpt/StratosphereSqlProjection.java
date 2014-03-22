@@ -90,6 +90,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		public int positionInOutput;
 		public int positionInRex;
 		public int fieldIndex;
+		public String name;
 		
 		@Override
 		public String toString() {
@@ -97,7 +98,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 					+ "positionInInput="+positionInInput+", "
 					+ "positionInOutput="+positionInOutput+", "
 					+ "positionInRex="+positionInRex+", "
-					+ "fieldIndex="+fieldIndex+"]";
+					+ "fieldIndex="+fieldIndex+" name="+name+"]";
 		}
 		@Override
 		public int hashCode() {
@@ -196,8 +197,9 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	        }
 	        for(ProjectionFieldProperties field: fields) {
 	        	// set result into Value.
-	        	((JavaValue) val[field.fieldIndex]).setObjectValue(result[field.fieldIndex]);
+	        	((JavaValue) val[field.fieldIndex]).setObjectValue(result[field.positionInRex]);
 	        	outRec.setField(field.positionInOutput, val[field.fieldIndex]);
+	        	System.err.println("Setting "+val[field.fieldIndex]+" as defined in "+field);
 	        }
 	        System.err.println("Collecting "+outRec);
 			out.collect(outRec);
@@ -230,10 +232,15 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	        	ProjectionFieldProperties field = new ProjectionFieldProperties();
 	        	field.positionInOutput = pos;
 	        	field.fieldIndex = pos;
+	        	field.positionInRex = pos;
 	        	field.positionInInput = rexInput.getKey();
 	        	field.fieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
-	        	fields.add(field);
-	        	System.err.println("adding projection field "+field);
+	        	if(fields.add(field)) {
+	        		System.err.println("adding projection field="+field+" for rex="+rex);
+	        	} else {
+	        		System.err.println("fields already contained "+field+" for rex="+rex);
+	        	}
+	        	field.name = rex.toString();
         	}
         	pos++;
         	replaceInputRefsByExternalInputRefsVisitor.resetInputList();

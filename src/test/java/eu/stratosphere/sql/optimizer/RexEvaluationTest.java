@@ -3,6 +3,7 @@ package eu.stratosphere.sql.optimizer;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import eu.stratosphere.sql.optimizer.SqlTest.SqlTestResult;
@@ -31,13 +32,15 @@ public class RexEvaluationTest {
 	@Test
 	public void noEval() {
 		SqlTestResult result = test.execute("SELECT customerName FROM tbl");
-		result.expectRow(0, ImmutableSet.of("Sales", "Marketing", "Acccounts") );
+		result.expectRowcount(3);
+		result.expectColumn(0, ImmutableList.of("Sales", "Marketing", "Acccounts") );
 	}
 	
 	@Test
 	public void substring() {
 		SqlTestResult result = test.execute("SELECT SUBSTRING(customerName FROM 1 FOR 2) FROM tbl");
-		result.expectRow(0, ImmutableSet.of("Sa", "Ma", "Ac") );
+		result.expectRowcount(3);
+		result.expectColumn(0, ImmutableList.of("Sa", "Ma", "Ac") );
 	}
 	
 	@Test
@@ -50,8 +53,9 @@ public class RexEvaluationTest {
 				+ "ELSE 'unknown' "
 				+ "END  "
 				+ "FROM tbl");
-		result.expectRow(0, ImmutableSet.of("Sa", "Ma", "Ac") );
-		result.expectRow(1, ImmutableSet.of("SALE", "MARK", "ACCO") );
-		result.expectRow(2, ImmutableSet.of("Salez", "Benchmarketing", "unknown") );
+		result.expectRowcount(3);
+		result.expectRow(0, ImmutableList.of("Sa", "SALE", "Salez"));
+		result.expectRow(1, ImmutableList.of("Ma", "MARK", "Benchmarketing"));
+		result.expectRow(2, ImmutableList.of("Ac", "ACCO", "unknown"));
 	}
 }

@@ -27,7 +27,7 @@ import org.eigenbase.sql.parser.SqlParseException;
 import com.google.common.collect.ImmutableSet;
 
 import eu.stratosphere.api.common.Plan;
-import eu.stratosphere.api.common.io.CollectionOutputFormat;
+import eu.stratosphere.api.common.io.ListOutputFormat;
 import eu.stratosphere.api.common.operators.AbstractUdfOperator;
 import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.GenericDataSink;
@@ -80,7 +80,8 @@ public class Launcher	{
 		
 		
 		RelNode convertedRelNode = planner.transform(0, planner.getEmptyTraitSet().plus(StratosphereRel.CONVENTION), rel);
-		
+		planner.close();
+		planner.reset();
 		System.err.println("Optimizer "+ convertedRelNode);
 		convertedRelNode.explain(pw);
 		Operator stratoRoot = null;
@@ -108,15 +109,14 @@ public class Launcher	{
 		System.err.println("Strato Root Op "+ stratoRoot);
 		//Class<? extends Value>[] fields = stratoProj.getFields();
 	//	FileDataSink out = new FileDataSink(new CsvOutputFormat("\n", ",", fields), "file://"+ System.getProperty("user.dir")+"//simple.out", stratoRoot, "Sql Result");
-		Collection<Record> coll = new LinkedList<Record>();
-		CollectionOutputFormat collOut = new CollectionOutputFormat(coll);
+		ListOutputFormat collOut = new ListOutputFormat();
 		GenericDataSink out = new GenericDataSink(collOut);
 		out.setInput(stratoRoot);
 		out.setDegreeOfParallelism(1);
 		Plan plan = new Plan(out, "Stratosphere SQL. Query: "+sql);
 		Pair<Plan, Collection<Record>> p = new Pair<Plan, Collection<Record>>();
 		p.k = plan;
-		p.v = coll;
+	//	p.v = coll;
 		return p;
 	}
 	
