@@ -1,29 +1,27 @@
 package eu.stratosphere.sql.optimizer;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultiset;
-
 import junit.framework.Assert;
+
+import com.google.common.base.Preconditions;
+
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.Launcher;
 import eu.stratosphere.sql.Launcher.Pair;
-import eu.stratosphere.sql.optimizer.SqlTest.SqlTestTable;
 import eu.stratosphere.sql.relOpt.StratosphereRelUtils;
 import eu.stratosphere.types.JavaValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
-import eu.stratosphere.types.ValueUtil;
 
 /**
  * Base class for Stratosphere SQL tests.
  * 
  * TODO: finish implementation
+ * TODO: replace by JDBC calling.
  */
 public class SqlTest {
 	// predefined test tables.
@@ -76,19 +74,29 @@ public class SqlTest {
 	
 	// -- fields of SqlTest
 	final private Launcher sqlLauncher = Launcher.getInstance();
-	final private LocalExecutor stratosphereExecutor = new LocalExecutor();
+	private LocalExecutor stratosphereExecutor = null;
 	
 	public SqlTest(SqlTestTable tbl) {
-		try {
-			stratosphereExecutor.start();
-		} catch (Exception e) {
-			throw new RuntimeException("Error starting Stratosphere", e);
+		
+	}
+	/**
+	 * Delay start of Stratosphere after SQL parsing.
+	 */
+	private void ensureStratosphereRunning() {
+		if(stratosphereExecutor == null) {
+			try {
+				stratosphereExecutor = new LocalExecutor();
+				stratosphereExecutor.start();
+			} catch (Exception e) {
+				throw new RuntimeException("Error starting Stratosphere", e);
+			}
 		}
 	}
 
 	public SqlTestResult execute(String sql) {
 		Pair<Plan, Collection<Record>> pair = sqlLauncher.convertToPlanWithCollection(sql);
 		Plan p = pair.k;
+		ensureStratosphereRunning();
 		try {
 			stratosphereExecutor.executePlan(p);
 		} catch (Exception e) {

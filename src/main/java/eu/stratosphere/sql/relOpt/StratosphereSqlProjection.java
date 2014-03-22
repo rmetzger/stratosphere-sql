@@ -1,5 +1,10 @@
 package eu.stratosphere.sql.relOpt;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -7,9 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.DataContext;
 import net.hydromatic.optiq.Schemas;
 
+import org.codehaus.janino.JavaSourceClassLoader;
+import org.codehaus.janino.util.resource.MapResourceFinder;
+import org.codehaus.janino.util.resource.ResourceFinder;
 import org.eigenbase.rel.ProjectRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
@@ -28,13 +37,27 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import eu.stratosphere.api.common.operators.Operator;
+import eu.stratosphere.api.common.operators.util.FieldAnnotations.SerializableField;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.operators.MapOperator;
+import eu.stratosphere.configuration.Configuration;
+import eu.stratosphere.types.JavaValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
+import eu.stratosphere.util.InstantiationUtil;
 import eu.stratosphere.util.ReflectionUtil;
 
+/**
+ * 
+ *
+ *			TODO: Add short cut for trivial projection.
+ *
+ *
+ * It is probably nicer to cleanly recompile the generated code
+ * (The current implementation is also recompiling the code, but there is a 
+ * lot of other stuff around it (class loaders))
+ */
 public class StratosphereSqlProjection extends ProjectRelBase implements StratosphereRel {
 
 	//
@@ -57,28 +80,91 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	// Stratosphere related
 	// 
 	
+	public static class ProjectionFieldProperties implements Serializable {
+		public Class<? extends Value> fieldType;
+		public int positionInInput;
+		public int positionInOutput;
+		public int positionInRex;
+		public int fieldIndex;
+	}
+	
 	/**
 	 * Simply pass the record through.
 	 */
 	public static class StratosphereSqlProjectionMapOperator extends MapFunction {
 		private static final long serialVersionUID = 1L;
-		private List<Entry<Integer, ? extends Class<? extends Value>>> types;
 		private Record outRec = new Record();
+		private transient Function1<DataContext, Object[]> function;
+		List<ProjectionFieldProperties> fields;
+		Map<String, byte[]> map = new HashMap<String, byte[]>();
 		
-		public StratosphereSqlProjectionMapOperator(List<Entry<Integer, ? extends Class<? extends Value>>> types) {
-			this.types = types;
+		public StratosphereSqlProjectionMapOperator(Function1<DataContext, Object[]> function,
+				List<ProjectionFieldProperties> fields, String sourceCode) {
+			this.function = function;
+			this.fields = fields;
+			String newSrc = "public class "+RexExecutable.GENERATED_CLASS_NAME+" implements net.hydromatic.linq4j.function.Function1, java.io.Serializable { "+sourceCode+" }";
+			try {
+				map.put(RexExecutable.GENERATED_CLASS_NAME+".java", newSrc.getBytes("UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException("Error while encoding the generated source", e);
+			}
+			
 		}
+		
+		@Override
+		public void open(Configuration parameters) throws Exception {
+			super.open(parameters);
+			
+		}
+		
+		private void writeObject(java.io.ObjectOutputStream stream)
+	            throws IOException {
+			stream.defaultWriteObject();
+			stream.writeObject(function);
+	    }
+
+	    private void readObject(java.io.ObjectInputStream stream)
+	            throws IOException, ClassNotFoundException {
+	    	stream.defaultReadObject();
+	    	
+	    	// initialize generated code.
+			ClassLoader currentClassLoader = Thread.currentThread().getContextClassLoader();
+			ResourceFinder srcFinder = new MapResourceFinder(map);
+			JavaSourceClassLoader janinoClassLoader = new JavaSourceClassLoader(currentClassLoader, srcFinder, "UTF-8");
+			Thread.currentThread().setContextClassLoader(janinoClassLoader);
+			Class<Function1> gen = (Class<Function1>) Class.forName(RexExecutable.GENERATED_CLASS_NAME, true, janinoClassLoader);
+	    	function = InstantiationUtil.instantiate(gen, Function1.class);
+	    }
+		
 
 		@Override
 		public void map(Record record, Collector<Record> out) throws Exception {
 			outRec.clear();
-			Iterator<Entry<Integer, ? extends Class<? extends Value>>> it = types.iterator();
-			while(it.hasNext()) {
-				Entry<Integer, ? extends Class<? extends Value>> desc = it.next();
-				Value val = ReflectionUtil.newInstance(desc.getValue());
-				record.getFieldInto(desc.getKey(), val);
-				outRec.addField(val);
+			Map<String, Object> map = new HashMap();
+			DataContext dataContext = new FakeItDataContext(map);
+			int i = 0;
+			Value[] val = new Value[fields.size()];
+			for(ProjectionFieldProperties field: fields) {
+				field.fieldIndex = i;
+				if(val[i] == null) {
+					val[i] = ReflectionUtil.newInstance(field.fieldType);
+				}
+				record.getFieldInto(field.positionInInput, val[i]);
+				map.put("?"+field.positionInRex, ((JavaValue) val[i]).getObjectValue());
+				i++;
 			}
+			
+			// call generated code
+	        Object[] result = function.apply(dataContext);
+	        for(Object o : result) {
+	        	System.err.println("result = "+o);
+	        }
+	        for(ProjectionFieldProperties field: fields) {
+	        	// set result into Value.
+	        	((JavaValue) val[field.fieldIndex]).setObjectValue(result[field.fieldIndex]);
+	        	outRec.setField(field.positionInOutput, val[field.fieldIndex]);
+	        }
+	        
 			out.collect(outRec);
 		}
 		
@@ -90,46 +176,25 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 	public Operator getStratosphereOperator() {
 		// get Input
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
-		List<Map.Entry<Integer, ? extends Class<? extends Value>>> types = new ArrayList<Map.Entry<Integer, ? extends Class<? extends Value>>>();
-		Iterator<RexNode> it = exps.iterator();
-		
-		while(it.hasNext()) {
-			RexNode node = it.next();
-			
-			final RexBuilder rexBuilder = getCluster().getRexBuilder();
-            Map<String, Object> map = new HashMap();
-            map.put("?1", "Fucker");
-			DataContext dataContext = new FakeItDataContext(map);
-            final RexExecutorImpl executor = new RexExecutorImpl();
-            List<RexNode> reducedValues = new ArrayList<RexNode>();
-            List<RexNode> inputExprs = new ArrayList<RexNode>();
-            inputExprs.add(node);
-          
-			//  RelDataType type = getCluster().getTypeFactory().createJavaType(String.class);
-		//	rexBuilder.makeInputRef(type, 0);
-//			
-            RexVisitor<Void> replaceInputRefsByExternalInputRefsVisitor = new ReplaceInputRefVisitor();
-            node.accept(replaceInputRefsByExternalInputRefsVisitor);
-            RexExecutable executable = executor.createExecutable(rexBuilder, inputExprs);
-            executable.setDataContext(dataContext);
-            Object[] result = executable.execute();
-            for(Object o : result) {
-            	System.err.println("result = "+o);
-            }
-		//	executor.execute(rexBuilder, ImmutableList.<RexNode>copyOf(inputExprs),
-          //          reducedValues);
-			
-			for(RexNode r : reducedValues) {
-				System.err.println("Rex node "+r);
-			}
-			
-//			RexInputRef inputRef = (RexInputRef) it.next();
-//			Pair<Integer, ? extends Class<? extends Value>> entry = new Pair(inputRef.getIndex(), StratosphereRelUtils.getTypeClass(inputRef.getType()));
-//			types.add(entry);
-		}
+
+		final RexBuilder rexBuilder = getCluster().getRexBuilder();
+        
+        final RexExecutorImpl executor = new RexExecutorImpl();
+        
+        ImmutableList<RexNode> localExps = ImmutableList.copyOf(exps);
+        RexVisitor<Void> replaceInputRefsByExternalInputRefsVisitor = new ReplaceInputRefVisitor();
+        for(RexNode node : localExps) {
+        	// set external variables
+        	node.accept(replaceInputRefsByExternalInputRefsVisitor);
+        }
+        
+        RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
+        
+        List<ProjectionFieldProperties> fields = new ArrayList<ProjectionFieldProperties>();
 	
 		// create MapOperator
-		MapOperator proj = MapOperator	.builder(new StratosphereSqlProjectionMapOperator(types))
+		MapOperator proj = MapOperator	.builder(new StratosphereSqlProjectionMapOperator(executable.getFunction(),
+																						fields, executable.getSource()))
 										.input(inputOp)
 										.name(buildName())
 										.build();
