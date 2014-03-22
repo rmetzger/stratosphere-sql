@@ -18,11 +18,11 @@ public class StandardOptimizerTests {
 //	+ "WHERE a.cnt = tbl.DEPTNO "
 //	+ "ORDER BY a.cnt ASC LIMIT 2";
 	private static String[] queries = {
-		"SELECT * FROM tbl",
-		"SELECT customerName, customerId, customerId, customerId FROM tbl",
-		"SELECT customerName, customerId, customerId, customerId FROM tbl WHERE customerId = 2",
-		"SELECT customerId FROM tbl WHERE ( customerId = 2 OR customerId = 3 OR customerId=3 ) AND (customerId < 15)",
-		"SELECT a.customerName, a.customerId, b.customerId FROM tbl a, tbl b WHERE (a.customerId = b.customerId) AND (a.customerId < 15)"
+		"SELECT * FROM departments",
+		"SELECT depName, depNo, depNo, depNo FROM departments",
+		"SELECT depName, depNo, depNo, depNo FROM departments WHERE depNo = 2",
+		"SELECT depNo FROM departments WHERE ( depNo = 2 OR depNo = 3 OR depNo=3 ) AND (depNo < 15)",
+		"SELECT a.depName, a.depNo, b.depNo FROM departments a, departments b WHERE (a.depNo = b.depNo) AND (a.depNo < 15)"
 	};
 	
 	@Test

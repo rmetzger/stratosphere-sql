@@ -1,0 +1,20 @@
+{
+  "fields": [
+    {
+      "name": "depNo",
+      "type": "INTEGER"
+    },
+    {
+      "name": "depName",
+      "type": "VARCHAR"
+    },
+    {
+      "name": "depManager",
+      "type": "VARCHAR"
+    }
+  ],
+  "primaryKey": "customerId",
+  "columnDelimiter": ",",
+  "rowDelimiter": "\\n",
+  "filePath": "/home/robert/Projekte/ozone/stratosphere-sql/src/main/resources/sampleTables/departments.csv"
+}

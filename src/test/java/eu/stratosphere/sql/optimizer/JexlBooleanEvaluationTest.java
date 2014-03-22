@@ -25,6 +25,7 @@ import org.eigenbase.sql.SqlNode;
 import org.eigenbase.sql.fun.SqlStdOperatorTable;
 import org.eigenbase.sql.parser.SqlParseException;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -35,6 +36,7 @@ import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
 
+@Ignore
 public class JexlBooleanEvaluationTest {
 	private static final JexlEngine jexl = new JexlEngine();
 	static {
