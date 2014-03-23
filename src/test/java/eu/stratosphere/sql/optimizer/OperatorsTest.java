@@ -42,7 +42,18 @@ public class OperatorsTest {
 	public void countAndSumStar() {
 		SqlTestResult result = test.execute("SELECT COUNT(*), SUM(depNo) FROM departments");
 		result.expectRowcount(1);
-		result.expectRow(0, ImmutableList.of(3) );
+		result.expectRow(0, ImmutableList.of(3L, 60L) );
+	}
+	
+	@Test
+	public void countAndSumStarInGroups() {
+		SqlTestResult result = test.execute("SELECT COUNT(*), SUM(depNo) "
+				+ "FROM departments "
+				+ "GROUP BY depNo");
+		result.expectRowcount(3);
+		result.expectRow(0, ImmutableList.of(1L, 10L) );
+		result.expectRow(1, ImmutableList.of(1L, 20L) );
+		result.expectRow(2, ImmutableList.of(1L, 30L) );
 	}
 	
 }
