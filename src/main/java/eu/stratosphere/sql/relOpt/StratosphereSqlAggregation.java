@@ -1,5 +1,7 @@
 package eu.stratosphere.sql.relOpt;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
@@ -10,13 +12,16 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.fun.SqlCountAggFunction;
 
 import com.google.common.base.Preconditions;
 
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
+import eu.stratosphere.sql.relOpt.StratosphereSqlAggregation.Aggregation.Type;
 import eu.stratosphere.types.Record;
+import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
 
 public class StratosphereSqlAggregation extends AggregateRelBase implements StratosphereRel {
@@ -45,9 +50,33 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		}
 		
 	}
+	
+	public static class Aggregation implements Serializable {
+		private static final long serialVersionUID = 1L;
+		
+		public static enum Type { COUNT, SUM }
+		
+		public Type type;
+		public Class<? extends Value> inputType;
+		public boolean isDistinct;
+		public int inputPos;
+	}
 	@Override
 	public Operator getStratosphereOperator() {
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
+		
+		List<Aggregation> aggFns = new ArrayList<Aggregation>(getAggCallList().size());
+		
+		for(AggregateCall call : getAggCallList()) {
+			Aggregation agg = new Aggregation();
+			org.eigenbase.rel.Aggregation optiqAgg = call.getAggregation();
+			if(optiqAgg instanceof SqlCountAggFunction) {
+				agg.type = Type.COUNT;
+			}
+			agg.isDistinct = call.isDistinct();
+			
+			aggFns.add(agg);
+		}
 		
 		ReduceOperator.Builder aggBuilder = ReduceOperator.builder(new StratosphereSqlAggregationOperator());
 		
