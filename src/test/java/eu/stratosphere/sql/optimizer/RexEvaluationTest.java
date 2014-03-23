@@ -1,13 +1,10 @@
 package eu.stratosphere.sql.optimizer;
 
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 
 import eu.stratosphere.sql.optimizer.SqlTest.SqlTestResult;
 import eu.stratosphere.sql.optimizer.SqlTest.SqlTestTable;
@@ -145,4 +142,28 @@ public class RexEvaluationTest {
 		result.expectRow(1, ImmutableList.of("Marketing", 20, 400.0d));
 		result.expectRow(2, ImmutableList.of("Accounts", 30, 900.0d));
 	}
+	
+	//
+	//  FILTER Operator
+	//
+	// -- String Functions --
+	//
+	@Test
+	public void filterLike() {
+		SqlTestResult result = test.execute("SELECT depName, depNo "
+				+ "FROM departments "
+				+ "WHERE depName LIKE 'Sa%'");
+		result.expectRow(0, ImmutableList.of("Sales",10 ));
+	}
+	
+	@Test
+	public void filterIn() {
+		SqlTestResult result = test.execute("SELECT depName, depNo "
+				+ "FROM departments "
+				+ "WHERE SUBSTRING(depName FROM 1 FOR 2) IN ('Sa', 'Ma')");
+		result.expectRow(0, ImmutableList.of("Sales",10 ));
+		result.expectRow(1, ImmutableList.of("Marketing",20 ));
+	}
+	
+	
 }

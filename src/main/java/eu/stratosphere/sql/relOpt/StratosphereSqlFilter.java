@@ -1,30 +1,49 @@
 package eu.stratosphere.sql.relOpt;
 
-import java.util.ArrayList;
+import java.io.Serializable;
+import java.io.StringReader;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import net.hydromatic.linq4j.function.Function1;
+import net.hydromatic.optiq.DataContext;
+import net.hydromatic.optiq.runtime.Utilities;
 
 import org.apache.commons.jexl2.Expression;
 import org.apache.commons.jexl2.JexlContext;
 import org.apache.commons.jexl2.JexlEngine;
 import org.apache.commons.jexl2.MapContext;
+import org.codehaus.janino.ClassBodyEvaluator;
+import org.codehaus.janino.Scanner;
 import org.eigenbase.rel.FilterRelBase;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.rex.RexLocalRef;
+import org.eigenbase.rex.RexBuilder;
+import org.eigenbase.rex.RexExecutable;
+import org.eigenbase.rex.RexExecutorImpl;
 import org.eigenbase.rex.RexNode;
+import org.eigenbase.sql.SqlKind;
+import org.eigenbase.util.Pair;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import eu.stratosphere.api.common.operators.Operator;
+import eu.stratosphere.api.java.record.functions.FunctionAnnotation.ConstantFieldsExcept;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.configuration.Configuration;
+import eu.stratosphere.sql.relOpt.StratosphereRexUtils.ReplaceInputRefVisitor;
 import eu.stratosphere.types.JavaValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
+import eu.stratosphere.util.ReflectionUtil;
 
 public class StratosphereSqlFilter	extends FilterRelBase implements StratosphereRel {
 	public StratosphereSqlFilter(RelOptCluster cluster, RelTraitSet traits,
@@ -39,42 +58,61 @@ public class StratosphereSqlFilter	extends FilterRelBase implements Stratosphere
 		return new StratosphereSqlFilter(getCluster(), traitSet, sole(inputs), getCondition());
 	}
 	
+	@ConstantFieldsExcept({})
 	public static class StratosphereSqlFilterMapOperator extends MapFunction {
 		private static final long serialVersionUID = 1L;
-		private static final JexlEngine JEXL = new JexlEngine();
+		private Set<StratosphereRexUtils.ProjectionFieldProperties> fields;
+		private String source;
+		private transient Function1<DataContext, Object[]> function;
 		
-		static {
-			JEXL.setCache(512);
-			JEXL.setLenient(false);
-			JEXL.setSilent(false);
+		public StratosphereSqlFilterMapOperator(String source, Set<StratosphereRexUtils.ProjectionFieldProperties> fields) {
+			this.source = source;
+			this.fields = fields;
 		}
-		
-		private String exprStr;
-		private transient Expression expr;
-		private transient JexlContext context;
-		private List<StratosphereRelUtils.ExprVar> variables;
-		public StratosphereSqlFilterMapOperator(String expression, List<StratosphereRelUtils.ExprVar> vars) {
-			this.exprStr = expression;
-			this.variables = vars;
-		}
+		@SuppressWarnings({ "deprecation", "unchecked" })
 		@Override
 		public void open(Configuration parameters) throws Exception {
 			super.open(parameters);
-			this.expr = JEXL.createExpression(exprStr);
-			this.context = new MapContext();
+			// compile gen code
+			this.function =  (Function1<DataContext, Object[]>) ClassBodyEvaluator.createFastClassBodyEvaluator(
+	                  new Scanner(null, new StringReader(source)),
+	                  RexExecutable.GENERATED_CLASS_NAME,
+	                  Utilities.class,
+	                  new Class[]{Function1.class , Serializable.class},
+	                  getClass().getClassLoader());
 		}
 
-		@Override
+		 // map operator fields
+	    private transient Value[] valuesCache;
+	    private transient Map<String, Object> map;
+	    private transient DataContext dataContext;
+	    
+	    
+		@Override 
 		public void map(Record record, Collector<Record> out) throws Exception {
-			// set values for expression
-			for(StratosphereRelUtils.ExprVar var : variables) {
-				Value val = record.getField(var.positionInRecord, var.type);
-				context.set(var.varName, ( (JavaValue<?>) val).getObjectValue() );
+			if(this.map == null) {
+				Preconditions.checkArgument(dataContext == null);
+				map = new HashMap<String, Object>();
+				dataContext = new FakeItDataContext(map);
 			}
-			// evaluate.
-			if((Boolean) this.expr.evaluate(context)) {
-				out.collect(record);
+			if(valuesCache == null) {
+				valuesCache = new Value[fields.size()];
 			}
+			// prepare variables
+			for(StratosphereRexUtils.ProjectionFieldProperties field: fields) {
+				if(valuesCache[field.fieldIndex] == null) {
+					valuesCache[field.fieldIndex] = ReflectionUtil.newInstance(field.inFieldType);
+				}
+				record.getFieldInto(field.positionInInput, valuesCache[field.fieldIndex]);
+				map.put("?"+field.positionInInput, ((JavaValue) valuesCache[field.fieldIndex]).getObjectValue());
+			}
+			Object[] result = function.apply(dataContext);
+	        for(Object o : result) {
+	        	System.err.println("result = "+o);
+	        }
+	        if((Boolean) result[0]) {
+	        	out.collect(record);
+	        }
 		}
 		
 	}
@@ -84,14 +122,28 @@ public class StratosphereSqlFilter	extends FilterRelBase implements Stratosphere
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
 		RexNode cond = getCondition();
 		
-		List<RexLocalRef> projects;
-		RelDataType outputRowType;
+		final RexBuilder rexBuilder = getCluster().getRexBuilder();
+        final RexExecutorImpl executor = new RexExecutorImpl();
+        StratosphereRexUtils.ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.ReplaceInputRefVisitor();
+        cond.accept(replaceInputRefsByExternalInputRefsVisitor);
+        
+        final ImmutableList<RexNode> localExps = ImmutableList.of(cond);
 		
-		String jexlExpr = StratosphereRelUtils.convertRexCallToJexlExpr(cond);
-		List<StratosphereRelUtils.ExprVar> vars = new ArrayList<StratosphereRelUtils.ExprVar>(); 
-		StratosphereRelUtils.getExprVarsFromRexCall(cond,vars);
 		
-		Operator filter = MapOperator.builder(new StratosphereSqlFilterMapOperator(jexlExpr, vars) )
+        Set<StratosphereRexUtils.ProjectionFieldProperties> fields = new HashSet<StratosphereRexUtils.ProjectionFieldProperties>();
+        int pos = 0;
+    	for(Pair<Integer, RelDataType> rexInput : replaceInputRefsByExternalInputRefsVisitor.getInputPosAndType() ) {
+        	StratosphereRexUtils.ProjectionFieldProperties field = new StratosphereRexUtils.ProjectionFieldProperties();
+        	field.fieldIndex = pos++;
+        	field.positionInInput = rexInput.getKey();
+        	field.inFieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
+        	field.name = cond.toString();
+        	fields.add(field);
+    	}
+        RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
+		System.err.println("Code: "+executable.getSource());
+        
+		Operator filter = MapOperator.builder(new StratosphereSqlFilterMapOperator(executable.getSource(), fields) )
 									.input(inputOp)
 									.name(condition.toString())
 									.build();

@@ -35,7 +35,7 @@ public class StratosphereRelUtils {
 		if(type.getSqlTypeName() == SqlTypeName.INTEGER) {
 			return IntValue.class;
 		}
-		if(type.getSqlTypeName() == SqlTypeName.VARCHAR) {
+		if(type.getSqlTypeName() == SqlTypeName.VARCHAR || type.getSqlTypeName() == SqlTypeName.CHAR) {
 			return StringValue.class;
 		}
 		if(type.getSqlTypeName() == SqlTypeName.DOUBLE) {
@@ -150,6 +150,7 @@ public class StratosphereRelUtils {
 			return;
 		}
 	}
-
 	
 }
+
+
