@@ -15,6 +15,7 @@ import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.sql.StratosphereSQLException;
 import eu.stratosphere.types.DoubleValue;
 import eu.stratosphere.types.IntValue;
+import eu.stratosphere.types.Key;
 import eu.stratosphere.types.StringValue;
 import eu.stratosphere.types.Value;
 
@@ -42,6 +43,14 @@ public class StratosphereRelUtils {
 			return DoubleValue.class;
 		}
  		throw new RuntimeException("Unsupported type "+type);
+	}
+	
+	public static Class<? extends Key> getKeyTypeClass(RelDataType type) {
+		final Class<? extends Value> val = getTypeClass(type);
+		if(val.isAssignableFrom(Key.class)) {
+			return (Class<? extends Key>) val;
+		}
+		throw new RuntimeException("RelDataType is not a Key");
 	}
 
 	public static Class<? extends Value> getTypeClass(Class clazz) {

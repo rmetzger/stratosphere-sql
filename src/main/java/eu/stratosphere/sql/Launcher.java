@@ -36,6 +36,7 @@ import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
 import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
+import eu.stratosphere.sql.rules.StratosphereAggregateRule;
 import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereJoinRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
@@ -59,7 +60,8 @@ public class Launcher	{
 		ruleSets = new StratosphereRuleSet( ImmutableSet.of(
 					(RelOptRule) StratosphereProjectionRule.INSTANCE,
 					StratosphereFilterRule.INSTANCE,
-					StratosphereJoinRule.INSTANCE
+					StratosphereJoinRule.INSTANCE,
+					StratosphereAggregateRule.INSTANCE
 				));
 		planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
 	}
@@ -87,10 +89,11 @@ public class Launcher	{
 		Operator stratoRoot = null;
 		Plan plan = null;
 		System.err.println("Create Stratosphere Plan: ");
-		if(convertedRelNode instanceof StratosphereSqlProjection) {
-			StratosphereSqlProjection stratoProj = ((StratosphereSqlProjection) convertedRelNode);
+		//if(convertedRelNode instanceof StratosphereSqlProjection) {
+		if(convertedRelNode instanceof StratosphereRel) {
+			StratosphereRel stratoRel = ((StratosphereRel) convertedRelNode);
 			
-			stratoRoot = stratoProj.getStratosphereOperator();
+			stratoRoot = stratoRel.getStratosphereOperator();
 			return stratoRoot;
 		}
 		throw new RuntimeException("Fix me, its obvious");
@@ -103,6 +106,7 @@ public class Launcher	{
 		try {
 			stratoRoot = convertToOperator(sql);
 		} catch (Exception e) {
+			e.printStackTrace(); // ease debugging
 			throw new RuntimeException("Some Sql exception ", e);
 		}
 		

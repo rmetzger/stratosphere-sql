@@ -1,7 +1,5 @@
 package eu.stratosphere.sql.utils;
 
-import javax.sound.midi.SysexMessage;
-
 import junit.framework.Assert;
 import net.hydromatic.optiq.DataContext;
 

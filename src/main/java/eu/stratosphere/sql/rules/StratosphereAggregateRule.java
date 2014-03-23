@@ -33,7 +33,7 @@ public class StratosphereAggregateRule extends ConverterRule {
 		System.err.println("Converting aggregate");
 		final AggregateRel aggregate = (AggregateRel) rel;
 		final RelTraitSet traits = aggregate.getTraitSet().plus(StratosphereRel.CONVENTION);
-		return new StratosphereSqlAggregation(aggregate.getCluster(), traits, aggregate.getChild(), aggregate.getGroupSet(), aggregate.getAggCallList());
+		return new StratosphereSqlAggregation(aggregate.getCluster(), traits, convert(aggregate.getChild(), traits), aggregate.getGroupSet(), aggregate.getAggCallList());
 	}
 
 }
