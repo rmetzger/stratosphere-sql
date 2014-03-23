@@ -111,7 +111,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		@Override
 		public void open(Configuration parameters) throws Exception {
 			super.open(parameters);
-			
+			dataContext = new StratosphereDataContext();
 		}
 		
 		private void writeObject(java.io.ObjectOutputStream stream)
@@ -136,7 +136,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		
 	    // map operator fields
 	    private transient Value[] valuesCache;
-
+	    private transient StratosphereDataContext dataContext;
 		@Override
 		public void map(Record record, Collector<Record> out) throws Exception {
 			outRec.clear();
@@ -154,8 +154,6 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 				System.err.println("Collecting "+outRec);
 				out.collect(outRec);
 			} else {
-				Map<String, Object> map = new HashMap<String, Object>();
-				DataContext dataContext = new FakeItDataContext(map);
 				Value[] val = new Value[fields.size()];
 				for(StratosphereRexUtils.ProjectionFieldProperties field: fields) {
 					if(field.trivialProjection) {
@@ -169,7 +167,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 						val[field.fieldIndex] = ReflectionUtil.newInstance(field.inFieldType);
 					}
 					record.getFieldInto(field.positionInInput, val[field.fieldIndex]);
-					map.put("?"+field.positionInInput, ((JavaValue) val[field.fieldIndex]).getObjectValue()); // was positionInRex.
+					dataContext.set(field.positionInInput, ((JavaValue) val[field.fieldIndex]).getObjectValue()); // was positionInRex.
 				}
 				
 				// call generated code
@@ -204,7 +202,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
 
 		final RexBuilder rexBuilder = getCluster().getRexBuilder();
-        final RexExecutorImpl executor = new RexExecutorImpl();
+        final RexExecutorImpl executor = new RexExecutorImpl(null);
         final ImmutableList<RexNode> localExps = ImmutableList.copyOf(exps);
         
         StratosphereRexUtils.ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.ReplaceInputRefVisitor();

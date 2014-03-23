@@ -84,16 +84,13 @@ public class StratosphereSqlFilter	extends FilterRelBase implements Stratosphere
 
 		 // map operator fields
 	    private transient Value[] valuesCache;
-	    private transient Map<String, Object> map;
-	    private transient DataContext dataContext;
+	    private transient StratosphereDataContext dataContext;
 	    
 	    
 		@Override 
 		public void map(Record record, Collector<Record> out) throws Exception {
-			if(this.map == null) {
-				Preconditions.checkArgument(dataContext == null);
-				map = new HashMap<String, Object>();
-				dataContext = new FakeItDataContext(map);
+			if(this.dataContext == null) {
+				dataContext = new StratosphereDataContext();
 			}
 			if(valuesCache == null) {
 				valuesCache = new Value[fields.size()];
@@ -104,7 +101,7 @@ public class StratosphereSqlFilter	extends FilterRelBase implements Stratosphere
 					valuesCache[field.fieldIndex] = ReflectionUtil.newInstance(field.inFieldType);
 				}
 				record.getFieldInto(field.positionInInput, valuesCache[field.fieldIndex]);
-				map.put("?"+field.positionInInput, ((JavaValue) valuesCache[field.fieldIndex]).getObjectValue());
+				dataContext.set(field.positionInInput, ((JavaValue) valuesCache[field.fieldIndex]).getObjectValue());
 			}
 			Object[] result = function.apply(dataContext);
 	        for(Object o : result) {
@@ -123,7 +120,7 @@ public class StratosphereSqlFilter	extends FilterRelBase implements Stratosphere
 		RexNode cond = getCondition();
 		
 		final RexBuilder rexBuilder = getCluster().getRexBuilder();
-        final RexExecutorImpl executor = new RexExecutorImpl();
+        final RexExecutorImpl executor = new RexExecutorImpl(null);
         StratosphereRexUtils.ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.ReplaceInputRefVisitor();
         cond.accept(replaceInputRefsByExternalInputRefsVisitor);
         
