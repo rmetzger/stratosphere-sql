@@ -150,8 +150,9 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 					}
 					record.getFieldInto(field.positionInInput, valuesCache[field.fieldIndex]);
 					outRec.setField(field.positionInOutput, valuesCache[field.fieldIndex]);
+					System.err.println("using field "+field);
 				}
-				System.err.println("Collecting "+outRec);
+				System.err.println("Collecting [trivialProj] "+outRec);
 				out.collect(outRec);
 			} else {
 				Value[] val = new Value[fields.size()];
@@ -187,7 +188,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		        	outRec.setField(field.positionInOutput, val[field.fieldIndex]);
 		        	System.err.println("Setting "+val[field.fieldIndex]+" as defined in "+field);
 		        }
-		        System.err.println("Collecting "+outRec);
+		        System.err.println("Collecting [complex proj] "+outRec);
 				out.collect(outRec);
 			}
 		}
@@ -201,6 +202,7 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		// get Input
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
 
+		System.err.println("Preparing operator "+this.getDigest());
 		final RexBuilder rexBuilder = getCluster().getRexBuilder();
         final RexExecutorImpl executor = new RexExecutorImpl(null);
         final ImmutableList<RexNode> localExps = ImmutableList.copyOf(exps);

@@ -24,7 +24,9 @@ import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.configuration.Configuration;
 import eu.stratosphere.sql.relOpt.StratosphereSqlAggregation.Aggregation.Type;
+import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.JavaValue;
+import eu.stratosphere.types.Key;
 import eu.stratosphere.types.LongValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
@@ -38,6 +40,7 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 			RelTraitSet traits, RelNode child, BitSet groupSet,
 			List<AggregateCall> aggCalls) {
 		super(cluster, traits, child, groupSet, aggCalls);
+		System.err.println("Child "+child+" Child rowtype "+child.getRowType());
 		Preconditions.checkArgument(getConvention() == CONVENTION);
 	}
 
@@ -70,40 +73,55 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 			return result;
 		}
 	}
+
+	
 	public static class SumAggregate extends AbstractAggregate {
-		private long sum = 0;
-		private LongValue result = new LongValue();
+		private long sum;
 		private int inFieldPos = 0;
 		private Value inFieldValue;
+		private Value outFieldValue;
 		
-		public SumAggregate(int inFieldPos, Value inFieldValue) {
+		public SumAggregate(int inFieldPos, Value inFieldValue, Value outFieldValue) {
 			this.inFieldPos = inFieldPos;
 			this.inFieldValue = inFieldValue;
+			this.outFieldValue = outFieldValue;
 		}
 		
 		@Override
 		void initialize() {
-			sum = 0;
+			 sum = 0L;
 		}
 		@Override
 		void nextRecord(Record r) {
 			r.getFieldInto(inFieldPos, inFieldValue);
 			// todo might also be int?
-			sum += (Integer) ( (JavaValue) inFieldValue).getObjectValue();
+			sum +=  ( (Number) ( (JavaValue) inFieldValue).getObjectValue() ).longValue();
 		}
 		@Override
 		Value getResult() {
-			result.setValue(sum);
-			return result;
+			if(outFieldValue instanceof LongValue) {
+				( (JavaValue)outFieldValue).setObjectValue(sum);
+				return outFieldValue;
+			} else if(outFieldValue instanceof IntValue) {
+				( (JavaValue)outFieldValue).setObjectValue( (int) sum );
+				return outFieldValue;
+			} else {
+				throw new RuntimeException("Unsupported aggregate type");
+			}
 		}
 	}
 	
 	public static class StratosphereSqlAggregationOperator extends ReduceFunction {
 		private static final long serialVersionUID = 1L;
 		private List<AbstractAggregate> aggFns;
+		private int[] groupKeys;
+		private Class<? extends Value>[] groupTypes;
 		
-		public StratosphereSqlAggregationOperator(List<AbstractAggregate> aggFns) {
+		public StratosphereSqlAggregationOperator(List<AbstractAggregate> aggFns, int[] groupKeys, Class<? extends Value>[] groupTypes) {
 			this.aggFns = aggFns;
+			Preconditions.checkArgument(groupKeys.length == groupTypes.length);
+			this.groupKeys = groupKeys;
+			this.groupTypes = groupTypes;
 		}
 		@Override
 		public void open(Configuration parameters) throws Exception {
@@ -118,11 +136,20 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		public void reduce(Iterator<Record> records, Collector<Record> out)
 				throws Exception {
 			outRecord.clear();
+			boolean first = true;
+			
 			for(AbstractAggregate agg : aggFns) {
 				agg.initialize();
 			}
 			while(records.hasNext()) {
 				final Record r = records.next();
+				if(first) {
+					// emit group keys
+					for(int i = 0; i < groupKeys.length; i++) {
+						outRecord.addField( r.getField(groupKeys[i], groupTypes[i]));
+					}
+					first = false;
+				}
 				for(AbstractAggregate agg : aggFns) {
 					agg.nextRecord(r);
 				}
@@ -131,42 +158,8 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 				Value r = agg.getResult();
 				outRecord.addField(r);
 			}
-			System.err.println("Collecting "+outRecord);
+			System.err.println("Collecting [aggr] "+outRecord);
 			out.collect(outRecord);
-//			if(outputCache == null) {
-//				outputCache = new Value[aggFns.size()];
-//			}
-//			if(inputCache == null) {
-//				inputCache = new Value[aggFns.size()];
-//			}
-//			int i = 0;
-//			while(records.hasNext()) {
-//			for(Aggregation aggr : aggFns) {
-//				if(outputCache[i] == null) {
-//					outputCache[i] = aggr.outputType.newInstance();
-//				}
-//				switch(aggr.type) {
-//					case COUNT:
-//						long cnt = 0;
-//						
-//							records.next();
-//							cnt++;
-//						}
-//						((JavaValue) outputCache[i]).setObjectValue(cnt);
-//						break;
-//					case SUM:
-//						long sum = 0;
-//						while(records.hasNext()) {
-//							Record r = records.next();
-//							r.get
-//						}
-//						((JavaValue) valuesCache[i]).setObjectValue(sum);
-//						break;
-//					default:
-//						throw new RuntimeException("Unknown aggregation type "+aggr.type);
-//				}
-//				i++;
-//			}
 		}
 		
 	}
@@ -200,13 +193,17 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 				int inFieldPos = call.getArgList().get(0);
 				RelDataType colType = getInput(0).getRowType().getFieldList().get(inFieldPos).getType();
 				Class<? extends Value> inFieldValueClass = StratosphereRelUtils.getTypeClass(colType);
+				RelDataType outColType = call.getType();
+				Class<? extends Value> outFieldValueClass = StratosphereRelUtils.getTypeClass(outColType);
 				Value inFieldValue;
+				Value outFieldValue;
 				try {
 					inFieldValue = inFieldValueClass.newInstance();
+					outFieldValue = outFieldValueClass.newInstance();
 				} catch (Exception e) {
 					throw new RuntimeException("Error instantiating result Value", e);
 				}
-				SumAggregate sum = new SumAggregate(inFieldPos, inFieldValue);
+				SumAggregate sum = new SumAggregate(inFieldPos, inFieldValue, outFieldValue);
 				aggFns.add(sum);
 			} else {
 				throw new RuntimeException("Unsupported aggregation type: "+ optiqAgg);
@@ -223,13 +220,20 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 			//aggFns.add(agg);
 		}
 		
-		ReduceOperator.Builder aggBuilder = ReduceOperator.builder(new StratosphereSqlAggregationOperator(aggFns));
+		Class<? extends Value>[] keyTypes = new Class[getGroupCount()];
+		int[] keyIdx = new int[getGroupCount()];
+		ReduceOperator.Builder aggBuilder = ReduceOperator.builder(new StratosphereSqlAggregationOperator(aggFns, keyIdx, keyTypes));
 		
 		final BitSet groups = getGroupSet();
+		int i = 0;
 		for(int col = 0; col < getGroupCount(); col++) {
 			if(groups.get(col)) {
 				RelDataType colType = getInput(0).getRowType().getFieldList().get(col).getType();
-				aggBuilder.keyField(StratosphereRelUtils.getKeyTypeClass(colType), col);
+				Class<? extends Key> colTypeClass = StratosphereRelUtils.getKeyTypeClass(colType);
+				aggBuilder.keyField(colTypeClass, col);
+				keyTypes[i] = colTypeClass;
+				keyIdx[i] = col;
+				i++;
 			}
 		}
 		ReduceOperator aggregation = aggBuilder.build();
