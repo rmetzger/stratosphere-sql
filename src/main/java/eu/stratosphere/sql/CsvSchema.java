@@ -116,7 +116,9 @@ public class CsvSchema extends AbstractSchema {
 					while ((token = parser.nextToken()) != null) {
 						
 						if (token == JsonToken.FIELD_NAME) {
-							if(parser.getText().equals("fields")) {							
+							if(parser.getText().equals("ignore")) {
+								return; // ignore this table
+							} else if(parser.getText().equals("fields")) {							
 									JsonToken token2 = parser.nextToken();
 									
 									/* event2 helps in iterating in the fields array

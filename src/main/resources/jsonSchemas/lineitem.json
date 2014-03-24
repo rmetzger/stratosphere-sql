@@ -1,0 +1,73 @@
+{
+	"ignore": "true",
+  "fields": [
+    {
+      "name": "l_orderkey",
+      "type": "INTEGER"
+    },
+    {
+      "name": "l_partkey",
+      "type": "INTEGER"
+    },
+    {
+      "name": "l_suppkey",
+      "type": "INTEGER"
+    },
+    {
+      "name": "l_linenumber",
+      "type": "INTEGER"
+    },
+    {
+      "name": "l_quantity",
+      "type": "DECIMAL"
+    },
+    {
+      "name": "l_extendedprice",
+      "type": "DECIMAL"
+    },
+    {
+      "name": "l_discount",
+      "type": "DECIMAL"
+    },
+    {
+      "name": "l_tax",
+      "type": "DECIMAL"
+    },
+    {
+      "name": "l_returnflag",
+      "type": "CHAR(1)"
+    },
+    {
+      "name": "l_linestatus",
+      "type": "CHAR(1)"
+    },
+    {
+      "name": "l_shipdate",
+      "type": "DATE"
+    },
+    {
+      "name": "l_commitdate",
+      "type": "DATE"
+    },
+    {
+      "name": "l_receiptdate",
+      "type": "DATE"
+    },
+    {
+      "name": "l_shipinstruct",
+      "type": "CHAR(25)"
+    },
+    {
+      "name": "l_shipmode",
+      "type": "CHAR(10)"
+    },
+    {
+      "name": "l_comment",
+      "type": "VARCHAR(44)"
+    }
+  ],
+  "primaryKey": "customerId",
+  "columnDelimiter": ",",
+  "rowDelimiter": "\\n",
+  "filePath": "/home/robert/Projekte/ozone/stratosphere-sql/src/main/resources/sampleTables/tpch/lineitem.tbl"
+}
