@@ -43,10 +43,6 @@ import eu.stratosphere.util.InstantiationUtil;
 import eu.stratosphere.util.ReflectionUtil;
 
 /**
- * 
- *
- *			TODO: Add short cut for trivial projection.
- *
  *
  * It is probably nicer to cleanly recompile the generated code
  * (The current implementation is also recompiling the code, but there is a 

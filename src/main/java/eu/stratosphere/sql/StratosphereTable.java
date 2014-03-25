@@ -17,7 +17,7 @@ public class StratosphereTable implements TranslatableTable {
 
 	private RelDataType rowType;
 	//CHECKSTYLE:OFF
-	public String primaryKey;
+//	public String primaryKey;
 	public String filePath;
 	public String columnDelimiter = ","; //default is assumed to be comma
 	public String rowDelimiter = "\n"; //default is assumed to be newline

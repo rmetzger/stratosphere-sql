@@ -18,6 +18,9 @@ import net.hydromatic.optiq.tools.ValidationException;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.rel.RelWriter;
 import org.eigenbase.rel.RelWriterImpl;
+import org.eigenbase.rel.rules.PushFilterPastJoinRule;
+import org.eigenbase.rel.rules.PushFilterPastProjectRule;
+import org.eigenbase.rel.rules.PushProjectPastJoinRule;
 import org.eigenbase.relopt.RelOptRule;
 import org.eigenbase.sql.SqlExplainLevel;
 import org.eigenbase.sql.SqlNode;
@@ -61,7 +64,10 @@ public class Launcher	{
 					(RelOptRule) StratosphereProjectionRule.INSTANCE,
 					StratosphereFilterRule.INSTANCE,
 					StratosphereJoinRule.INSTANCE,
-					StratosphereAggregateRule.INSTANCE
+					StratosphereAggregateRule.INSTANCE,
+					PushFilterPastJoinRule.FILTER_ON_JOIN, // Push filters into the join to extract the key columns
+					PushProjectPastJoinRule.INSTANCE,
+					PushFilterPastProjectRule.INSTANCE
 				));
 		planner = Frameworks.getPlanner(Lex.MYSQL, schemaFactory, operatorTable, ruleSets);
 	}

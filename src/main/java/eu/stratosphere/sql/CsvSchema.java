@@ -186,17 +186,17 @@ public class CsvSchema extends AbstractSchema {
 									
 								}else if (parser.getText().equals("primaryKey")){
 									token = parser.nextToken();
-									((StratosphereTable)table).primaryKey = parser.getText();							 
+									// ((StratosphereTable)table).primaryKey = parser.getText();							 
 								} else if (parser.getText().equals("columnDelimiter")){
 										token = parser.nextToken();
 										((StratosphereTable)table).columnDelimiter = parser.getText();						 
-									} else if (parser.getText().equals("rowDelimiter")){
-											token = parser.nextToken();
-											((StratosphereTable)table).rowDelimiter = parser.getText();								 								 
-										} else if (parser.getText().equals("filePath")){
-												token = parser.nextToken();
-												((StratosphereTable)table).filePath = parser.getText();
-										}
+								} else if (parser.getText().equals("rowDelimiter")){
+										token = parser.nextToken();
+										((StratosphereTable)table).rowDelimiter = parser.getText();								 								 
+								} else if (parser.getText().equals("filePath")){
+										token = parser.nextToken();
+										((StratosphereTable)table).filePath = parser.getText();
+								}
 						}
 						
 					}//while

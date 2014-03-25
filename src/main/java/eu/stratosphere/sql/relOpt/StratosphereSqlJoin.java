@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eigenbase.rel.JoinRelBase;
 import org.eigenbase.rel.JoinRelType;
 import org.eigenbase.rel.RelNode;
+import org.eigenbase.rel.metadata.RelMetadataQuery;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelOptUtil;
 import org.eigenbase.relopt.RelTraitSet;
@@ -16,29 +19,19 @@ import org.eigenbase.rex.RexNode;
 import com.google.common.base.Preconditions;
 
 import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.api.java.record.functions.JoinFunction;
+import eu.stratosphere.api.java.record.operators.CrossWithLargeOperator;
 import eu.stratosphere.api.java.record.operators.JoinOperator;
 import eu.stratosphere.sql.StratosphereSQLException;
+import eu.stratosphere.sql.relOpt.join.StratosphereSqlCrossOperator;
+import eu.stratosphere.sql.relOpt.join.StratosphereSqlJoinOperator;
 import eu.stratosphere.types.Key;
-import eu.stratosphere.types.Record;
-import eu.stratosphere.types.Value;
-import eu.stratosphere.util.Collector;
 
 public class StratosphereSqlJoin extends JoinRelBase implements RelNode, StratosphereRel {
-
+	private static final Log LOG = LogFactory.getLog(StratosphereSqlJoin.class);
+	
 	private List<Integer> leftKeys;
 	private List<Integer> rightKeys;
 	
-	public static class StratosphereSqlJoinOperator extends JoinFunction {
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public void join(Record value1, Record value2, Collector<Record> out)
-				throws Exception {
-			//
-		}
-		
-	}
 	public StratosphereSqlJoin(RelOptCluster cluster, RelTraitSet traits,
 			RelNode left, RelNode right, RexNode condition,
 			JoinRelType joinType, Set<String> variablesStopped) {
@@ -70,11 +63,7 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 					condition,
 					leftKeys,
 					rightKeys);
-			if (!remaining.isAlwaysTrue()) {
-			throw new StratosphereSQLException(
-				"StratosphereSqlJoinOperator only supports equi-join");
-			}
-			Preconditions.checkArgument( leftKeys.size() == rightKeys.size() );
+		Preconditions.checkArgument( leftKeys.size() == rightKeys.size() );
 		RelNode leftRel = getInput(0);
 		RelNode rightRel = getInput(1);
 		Operator leftOperator = StratosphereRelUtils.toStratoRel(leftRel).getStratosphereOperator();
@@ -83,27 +72,40 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 		Class<? extends Key>[] types = new Class[leftKeys.size()];
 		for(int i = 0; i < leftKeys.size(); i++) {
 			
-			RelDataType leftRow = leftRel.getExpectedInputRowType(leftKeys.get(i));
-			Class<? extends Value> leftType = StratosphereRelUtils.getTypeClass(leftRow);
+			//leftRel.getExpectedInputRowType(leftKeys.get(i));
+			RelDataType leftRow = leftRel.getRowType().getFieldList().get(leftKeys.get(i)).getType();
+			Class<? extends Key> leftType = StratosphereRelUtils.getKeyTypeClass(leftRow);
 			
-			RelDataType rightRow = leftRel.getExpectedInputRowType(rightKeys.get(i));
-			Class<? extends Value> rightType = StratosphereRelUtils.getTypeClass(rightRow);
+			RelDataType rightRow = rightRel.getRowType().getFieldList().get(rightKeys.get(i)).getType();
+			Class<? extends Key> rightType = StratosphereRelUtils.getKeyTypeClass(rightRow);
 			// check for equality
 			if(!leftType.equals(rightType)) {
 				throw new StratosphereSQLException("Types not equal.");
 			}
-			if(leftType.isAssignableFrom(Key.class)) {
-				types[i] = (Class<? extends Key>) leftType;
+			types[i] = leftType;
+		}
+		if (!remaining.isAlwaysTrue() && leftKeys.size() == 0) {
+			// cartesian product
+			LOG.warn("Join "+this+" is executing a cartesian product");
+			CrossWithLargeOperator.Builder crossBuilder = CrossWithLargeOperator.builder(new StratosphereSqlCrossOperator() );
+			double leftEst = RelMetadataQuery.getRowCount(leftRel);
+			double rightEst = RelMetadataQuery.getRowCount(rightRel);
+			LOG.info("LeftEst="+leftEst+" rightEst="+rightEst);
+			if(leftEst >= rightEst) {
+				crossBuilder.input1(leftOperator);
+				crossBuilder.input2(rightOperator);
 			} else {
-				throw new StratosphereSQLException("Keyfield is not a Key");
+				crossBuilder.input1(rightOperator);
+				crossBuilder.input2(leftOperator);
 			}
+			return crossBuilder.build();
 		}
 		
 		
 		JoinOperator.Builder joinBuilder = JoinOperator.builder(new StratosphereSqlJoinOperator(), 
 				types[0], leftKeys.get(0), rightKeys.get(0));
 		for(int i = 1; i < leftKeys.size(); i++) {
-			joinBuilder.keyField(types[i], leftKeys.get(0), rightKeys.get(0));
+			joinBuilder.keyField(types[i], leftKeys.get(i), rightKeys.get(i));
 		}
 		JoinOperator join = joinBuilder.input1(leftOperator)
 				.input2(rightOperator)

@@ -56,4 +56,15 @@ public class OperatorsTest {
 		result.expectRow(2, ImmutableList.of(1L, 30) );
 	}
 	
+	@Test
+	public void join() {
+		SqlTestResult result = test.execute("SELECT * "
+				+ "FROM departments, customer "
+				+ "WHERE departments.depNo/10 = customer.customerId");
+		result.expectRowcount(3);
+		result.expectRow(0, ImmutableList.of(1L, 10) );
+		result.expectRow(1, ImmutableList.of(1L, 20) );
+		result.expectRow(2, ImmutableList.of(1L, 30) );
+	}
+	
 }
