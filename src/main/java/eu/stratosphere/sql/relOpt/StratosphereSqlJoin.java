@@ -22,6 +22,7 @@ import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.operators.CrossWithLargeOperator;
 import eu.stratosphere.api.java.record.operators.JoinOperator;
 import eu.stratosphere.sql.StratosphereSQLException;
+import eu.stratosphere.sql.relOpt.filter.Filter;
 import eu.stratosphere.sql.relOpt.join.StratosphereSqlCrossOperator;
 import eu.stratosphere.sql.relOpt.join.StratosphereSqlJoinOperator;
 import eu.stratosphere.types.Key;
@@ -87,7 +88,11 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 		if (!remaining.isAlwaysTrue() && leftKeys.size() == 0) {
 			// cartesian product
 			LOG.warn("Join "+this+" is executing a cartesian product");
-			CrossWithLargeOperator.Builder crossBuilder = CrossWithLargeOperator.builder(new StratosphereSqlCrossOperator() );
+			Filter f = new Filter();
+			f.setCondition(remaining);
+			f.setRexBuilder(getCluster().getRexBuilder());
+			f.prepareShipping();
+			CrossWithLargeOperator.Builder crossBuilder = CrossWithLargeOperator.builder(new StratosphereSqlCrossOperator(f) );
 			double leftEst = RelMetadataQuery.getRowCount(leftRel);
 			double rightEst = RelMetadataQuery.getRowCount(rightRel);
 			LOG.info("LeftEst="+leftEst+" rightEst="+rightEst);
