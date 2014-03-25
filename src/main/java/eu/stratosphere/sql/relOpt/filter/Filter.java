@@ -99,6 +99,10 @@ public class Filter implements Serializable {
     private transient StratosphereDataContext dataContext;
 	
 	public boolean evaluate(Record record) {
+		return evaluateTwo(record, null);
+	}
+
+	public boolean evaluateTwo(Record record, Record record2) {
 		if(this.dataContext == null) {
 			dataContext = new StratosphereDataContext();
 		}
@@ -110,7 +114,14 @@ public class Filter implements Serializable {
 			if(valuesCache[field.fieldIndex] == null) {
 				valuesCache[field.fieldIndex] = ReflectionUtil.newInstance(field.inFieldType);
 			}
-			record.getFieldInto(field.positionInInput, valuesCache[field.fieldIndex]);
+			if(field.positionInInput < record.getNumFields()) {
+				record.getFieldInto(field.positionInInput, valuesCache[field.fieldIndex]);
+			} else {
+				if(record2 == null) {
+					throw new RuntimeException("Second record not set. Filter not configured correctly");
+				}
+				record2.getFieldInto(field.positionInInput-record.getNumFields(), valuesCache[field.fieldIndex]);
+			}
 			dataContext.set(field.positionInInput, ((JavaValue) valuesCache[field.fieldIndex]).getObjectValue());
 		}
 		Object[] result = function.apply(dataContext);
@@ -118,10 +129,5 @@ public class Filter implements Serializable {
         	System.err.println("result = "+o);
         }
         return (Boolean) result[0];
-	}
-
-	public boolean evaluteTwo(Record record1, Record record2) {
-		// TODO Auto-generated method stub
-		return false;
 	}
 }
