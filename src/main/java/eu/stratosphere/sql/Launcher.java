@@ -3,8 +3,6 @@ package eu.stratosphere.sql;
 import java.io.File;
 import java.io.PrintWriter;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Map.Entry;
 
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.Schema;
@@ -31,21 +29,16 @@ import com.google.common.collect.ImmutableSet;
 
 import eu.stratosphere.api.common.Plan;
 import eu.stratosphere.api.common.io.ListOutputFormat;
-import eu.stratosphere.api.common.operators.AbstractUdfOperator;
-import eu.stratosphere.api.common.operators.FileDataSink;
 import eu.stratosphere.api.common.operators.GenericDataSink;
 import eu.stratosphere.api.common.operators.Operator;
-import eu.stratosphere.api.java.record.io.CsvOutputFormat;
 import eu.stratosphere.client.LocalExecutor;
 import eu.stratosphere.sql.relOpt.StratosphereRel;
-import eu.stratosphere.sql.relOpt.StratosphereSqlProjection;
 import eu.stratosphere.sql.rules.StratosphereAggregateRule;
 import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereJoinRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
 import eu.stratosphere.types.Record;
-import eu.stratosphere.types.Value;
 
 
 

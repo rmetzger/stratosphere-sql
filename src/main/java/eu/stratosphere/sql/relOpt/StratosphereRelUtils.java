@@ -22,7 +22,7 @@ import eu.stratosphere.types.Value;
 
 public class StratosphereRelUtils {
 	private StratosphereRelUtils() {}
-	
+
 	public static Value newValue(RelDataType in) {
 		if(in.getSqlTypeName() == SqlTypeName.INTEGER) {
 			return new IntValue();
@@ -46,9 +46,9 @@ public class StratosphereRelUtils {
 		if(type.getSqlTypeName() == SqlTypeName.BIGINT) {
 			return LongValue.class;
 		}
- 		throw new RuntimeException("Unsupported type "+type);
+		throw new RuntimeException("Unsupported type "+type);
 	}
-	
+
 	public static Class<? extends Key> getKeyTypeClass(RelDataType type) {
 		final Class<? extends Value> val = getTypeClass(type);
 		if(Key.class.isAssignableFrom(val) ) {
@@ -72,7 +72,7 @@ public class StratosphereRelUtils {
 		}
 		throw new RuntimeException("Unsupported class "+clazz);
 	}
-	
+
 	public static Operator openSingleInputOperator(List<RelNode> optiqInput) {
 		Operator inputOp = null;
 		if(optiqInput.size() == 1) {
@@ -84,14 +84,14 @@ public class StratosphereRelUtils {
 		}
 		return inputOp;
 	}
-	
+
 	public static StratosphereRel toStratoRel(RelNode input) {
 		if(!(input instanceof StratosphereRel)) {
 			throw new StratosphereSQLException("Input is not a StratosphereRel. It is "+input.getClass().getName());
 		}
 		return (StratosphereRel) input;
 	}
-	
+
 	public static String convertRexCallToJexlExpr(RexNode c) {
 		StringBuffer sb = new StringBuffer();
 		if(c instanceof RexCall) {
@@ -140,7 +140,7 @@ public class StratosphereRelUtils {
 		public String varName;
 		//CHECKSTYLE:ON
 	}
-	
+
 	public static void getExprVarsFromRexCall(RexNode cond, List<ExprVar> result) {
 		if(cond instanceof RexCall) {
 			RexCall call = (RexCall) cond;
@@ -166,7 +166,7 @@ public class StratosphereRelUtils {
 			return;
 		}
 	}
-	
+
 }
 
 

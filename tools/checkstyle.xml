@@ -13,8 +13,12 @@
         value="Line has leading space characters; indentation should be performed with tabs only." />
       <property name="ignoreComments" value="true" />
     </module>
-    <module name="FileContentsHolder" />
-    <module name="ConstantName" />
+    <module name="AvoidStarImport" />
+    <module name="UnusedImports" />
+    <module name="NeedBraces" />
+    <module name="ArrayTypeStyle" />
+
+  <!--  <module name="ConstantName" />
     <module name="LocalFinalVariableName" />
     <module name="LocalVariableName" />
     <module name="MemberName" />
@@ -29,13 +33,13 @@
     <module name="MethodLength" />
     <module name="ParameterNumber" />
     <module name="AvoidNestedBlocks" />
+    <module name="EmptyBlock" />
     <module name="LeftCurly" />
     <module name="NeedBraces" />
-    <module name="RightCurly" />
+    <module name="RightCurly" /> 
     <module name="EmptyStatement" />
     <module name="EqualsHashCode" />
     <module name="IllegalInstantiation" />
-    <module name="InnerAssignment" />
     <module name="MissingSwitchDefault" />
     <module name="RedundantThrows" />
     <module name="SimplifyBooleanExpression" />
@@ -44,6 +48,6 @@
     <module name="InterfaceIsType" />
     <module name="VisibilityModifier" />
     <module name="ArrayTypeStyle" />
-    <module name="UpperEll" />
+    <module name="UpperEll" /> -->
   </module>
 </module>

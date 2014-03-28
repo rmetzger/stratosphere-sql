@@ -12,11 +12,11 @@ public class StratosphereSqlFilterMapOperator extends MapFunction {
 	//private Set<StratosphereRexUtils.ProjectionFieldProperties> fields;
 	//private String source;
 	private Filter filter;
-	
+
 	public StratosphereSqlFilterMapOperator(Filter filter) {
 		this.filter = filter;
 	}
-	
+
 	@SuppressWarnings({ "deprecation", "unchecked" })
 	@Override
 	public void open(Configuration parameters) throws Exception {
@@ -24,13 +24,13 @@ public class StratosphereSqlFilterMapOperator extends MapFunction {
 		// compile gen code
 		filter.prepareEvaluation();
 	}
-    
-	@Override 
+
+	@Override
 	public void map(Record record, Collector<Record> out) throws Exception {
-		
-        if(filter.evaluate(record)) {
-        	out.collect(record);
-        }
+
+		if(filter.evaluate(record)) {
+			out.collect(record);
+		}
 	}
-	
+
 }

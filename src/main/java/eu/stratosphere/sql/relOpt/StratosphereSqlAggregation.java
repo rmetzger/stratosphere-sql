@@ -6,8 +6,6 @@ import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.sound.midi.SysexMessage;
-
 import org.eigenbase.rel.AggregateCall;
 import org.eigenbase.rel.AggregateRelBase;
 import org.eigenbase.rel.RelNode;
@@ -23,7 +21,6 @@ import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.sql.relOpt.StratosphereSqlAggregation.Aggregation.Type;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.JavaValue;
 import eu.stratosphere.types.Key;
@@ -31,11 +28,10 @@ import eu.stratosphere.types.LongValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
-import eu.stratosphere.util.InstantiationUtil;
 
 public class StratosphereSqlAggregation extends AggregateRelBase implements StratosphereRel {
 
-	
+
 	public StratosphereSqlAggregation(RelOptCluster cluster,
 			RelTraitSet traits, RelNode child, BitSet groupSet,
 			List<AggregateCall> aggCalls) {
@@ -74,22 +70,22 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		}
 	}
 
-	
+
 	public static class SumAggregate extends AbstractAggregate {
 		private long sum;
 		private int inFieldPos = 0;
 		private Value inFieldValue;
 		private Value outFieldValue;
-		
+
 		public SumAggregate(int inFieldPos, Value inFieldValue, Value outFieldValue) {
 			this.inFieldPos = inFieldPos;
 			this.inFieldValue = inFieldValue;
 			this.outFieldValue = outFieldValue;
 		}
-		
+
 		@Override
 		void initialize() {
-			 sum = 0L;
+			sum = 0L;
 		}
 		@Override
 		void nextRecord(Record r) {
@@ -110,13 +106,13 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 			}
 		}
 	}
-	
+
 	public static class StratosphereSqlAggregationOperator extends ReduceFunction {
 		private static final long serialVersionUID = 1L;
 		private List<AbstractAggregate> aggFns;
 		private int[] groupKeys;
 		private Class<? extends Value>[] groupTypes;
-		
+
 		public StratosphereSqlAggregationOperator(List<AbstractAggregate> aggFns, int[] groupKeys, Class<? extends Value>[] groupTypes) {
 			this.aggFns = aggFns;
 			Preconditions.checkArgument(groupKeys.length == groupTypes.length);
@@ -129,7 +125,7 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 			super.open(parameters);
 			this.outRecord = new Record();
 		}
-		
+
 		// reduce method fields
 		private transient Record outRecord;
 		@Override
@@ -137,7 +133,7 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 				throws Exception {
 			outRecord.clear();
 			boolean first = true;
-			
+
 			for(AbstractAggregate agg : aggFns) {
 				agg.initialize();
 			}
@@ -161,14 +157,14 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 			System.err.println("Collecting [aggr] "+outRecord);
 			out.collect(outRecord);
 		}
-		
+
 	}
-	
+
 	public static class Aggregation implements Serializable {
 		private static final long serialVersionUID = 1L;
-		
+
 		public static enum Type { COUNT, SUM }
-		
+
 		public Type type;
 		public Class<? extends Value> inputType;
 		public Class<? extends Value> outputType;
@@ -178,7 +174,7 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 	@Override
 	public Operator getStratosphereOperator() {
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
-		
+
 		List<AbstractAggregate> aggFns = new ArrayList<AbstractAggregate>(getAggCallList().size());
 		int nr = 0;
 		for(AggregateCall call : getAggCallList()) {
@@ -216,14 +212,14 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 //			}
 //			agg.isDistinct = call.isDistinct();
 //			agg.inputPositions = call.getArgList();
-			
+
 			//aggFns.add(agg);
 		}
-		
+
 		Class<? extends Value>[] keyTypes = new Class[getGroupCount()];
 		int[] keyIdx = new int[getGroupCount()];
 		ReduceOperator.Builder aggBuilder = ReduceOperator.builder(new StratosphereSqlAggregationOperator(aggFns, keyIdx, keyTypes));
-		
+
 		final BitSet groups = getGroupSet();
 		int i = 0;
 		for(int col = 0; col < getGroupCount(); col++) {
@@ -238,10 +234,10 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		}
 		ReduceOperator aggregation = aggBuilder.build();
 		aggregation.setInput(inputOp);
-		
+
 		return aggregation;
 	}
 
-	
+
 
 }

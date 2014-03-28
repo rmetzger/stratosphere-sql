@@ -7,8 +7,6 @@ import java.util.Set;
 
 import junit.framework.Assert;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 
 import eu.stratosphere.api.common.Plan;

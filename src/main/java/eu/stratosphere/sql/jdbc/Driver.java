@@ -1,10 +1,7 @@
 package eu.stratosphere.sql.jdbc;
 
-import net.hydromatic.avatica.AvaticaFactory;
 import net.hydromatic.avatica.DriverVersion;
-import net.hydromatic.avatica.Handler;
 import net.hydromatic.avatica.UnregisteredDriver;
-import net.hydromatic.optiq.jdbc.OptiqJdbc41Factory;
 
 public class Driver extends UnregisteredDriver{
 	public static final String CONNECT_STRING_PREFIX = "jdbc:stratosphere:";

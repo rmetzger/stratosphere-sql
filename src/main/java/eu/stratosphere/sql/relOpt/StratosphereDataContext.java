@@ -1,8 +1,6 @@
 package eu.stratosphere.sql.relOpt;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
 
 import net.hydromatic.linq4j.QueryProvider;
 import net.hydromatic.optiq.DataContext;

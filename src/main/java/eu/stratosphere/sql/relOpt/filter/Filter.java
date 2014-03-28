@@ -36,13 +36,13 @@ public class Filter implements Serializable {
 	private transient RexBuilder rexBuilder;
 	// temporary cluster side variables
 	private transient Function1<DataContext, Object[]> function;
-	
+
 	// to-transfer data.
 	private Set<StratosphereRexUtils.ProjectionFieldProperties> fields;
 	private String source;
-	
+
 	public Filter() {
-		
+
 	}
 
 	public void setCondition(RexNode condition) {
@@ -59,45 +59,45 @@ public class Filter implements Serializable {
 	public void prepareShipping() {
 		Preconditions.checkNotNull(condition);
 		Preconditions.checkNotNull(rexBuilder);
-		
+
 		StratosphereRexUtils.ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.ReplaceInputRefVisitor();
 		condition.accept(replaceInputRefsByExternalInputRefsVisitor);
-        
-        final ImmutableList<RexNode> localExps = ImmutableList.of(condition);
-		
-        fields = new HashSet<StratosphereRexUtils.ProjectionFieldProperties>();
-        int pos = 0;
-    	for(Pair<Integer, RelDataType> rexInput : replaceInputRefsByExternalInputRefsVisitor.getInputPosAndType() ) {
-        	StratosphereRexUtils.ProjectionFieldProperties field = new StratosphereRexUtils.ProjectionFieldProperties();
-        	field.fieldIndex = pos++;
-        	field.positionInInput = rexInput.getKey();
-        	field.inFieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
-        	field.name = condition.toString();
-        	fields.add(field);
-    	}
-    	final RexExecutorImpl executor = new RexExecutorImpl(null);
-        RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
+
+		final ImmutableList<RexNode> localExps = ImmutableList.of(condition);
+
+		fields = new HashSet<StratosphereRexUtils.ProjectionFieldProperties>();
+		int pos = 0;
+		for(Pair<Integer, RelDataType> rexInput : replaceInputRefsByExternalInputRefsVisitor.getInputPosAndType() ) {
+			StratosphereRexUtils.ProjectionFieldProperties field = new StratosphereRexUtils.ProjectionFieldProperties();
+			field.fieldIndex = pos++;
+			field.positionInInput = rexInput.getKey();
+			field.inFieldType = StratosphereRelUtils.getTypeClass(rexInput.getValue());
+			field.name = condition.toString();
+			fields.add(field);
+		}
+		final RexExecutorImpl executor = new RexExecutorImpl(null);
+		RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
 		System.err.println("Code: "+executable.getSource());
 		this.source = executable.getSource();
 	}
-	
+
 	public void prepareEvaluation() {
 		try {
 			this.function =  (Function1<DataContext, Object[]>) ClassBodyEvaluator.createFastClassBodyEvaluator(
-		        new Scanner(null, new StringReader(source)),
-		        RexExecutable.GENERATED_CLASS_NAME,
-		        Utilities.class,
-		        new Class[]{Function1.class , Serializable.class},
-		        getClass().getClassLoader());
+				new Scanner(null, new StringReader(source)),
+				RexExecutable.GENERATED_CLASS_NAME,
+				Utilities.class,
+				new Class[]{Function1.class , Serializable.class},
+				getClass().getClassLoader());
 		} catch (Exception e) {
 			throw new RuntimeException("Error while compiling the generated code");
 		}
 	}
-	
+
 	// evaluate operator fields
-    private transient Value[] valuesCache;
-    private transient StratosphereDataContext dataContext;
-	
+	private transient Value[] valuesCache;
+	private transient StratosphereDataContext dataContext;
+
 	public boolean evaluate(Record record) {
 		return evaluateTwo(record, null);
 	}
@@ -125,9 +125,9 @@ public class Filter implements Serializable {
 			dataContext.set(field.positionInInput, ((JavaValue) valuesCache[field.fieldIndex]).getObjectValue());
 		}
 		Object[] result = function.apply(dataContext);
-        for(Object o : result) {
-        	System.err.println("result = "+o);
-        }
-        return (Boolean) result[0];
+		for(Object o : result) {
+			System.err.println("result = "+o);
+		}
+		return (Boolean) result[0];
 	}
 }
