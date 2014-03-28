@@ -13,7 +13,7 @@ Please open issues if you want to help with the development!
 I'm happy about any help, but beware that this is work in progress! I'll quickly change stuff and this implementation does not reflect how we want to implement the SQL interface in the end!
 
 
-You need to check out this branch of Stratosphere to use the SQL interface https://github.com/rmetzger/stratosphere/tree/sql_mainline_changes 
+You need to check out this branch of Stratosphere to use the SQL interface https://github.com/rmetzger/stratosphere/tree/sql_mainline_changes_update1
 
 
 Development Roadmap
