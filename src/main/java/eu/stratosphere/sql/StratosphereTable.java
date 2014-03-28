@@ -11,7 +11,7 @@ import org.eigenbase.relopt.RelOptTable.ToRelContext;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
-import eu.stratosphere.sql.relOpt.CSVStratosphereDataSource;
+import eu.stratosphere.sql.relOpt.StratosphereCSVDataSource;
 
 public class StratosphereTable implements TranslatableTable {
 
@@ -49,7 +49,7 @@ public class StratosphereTable implements TranslatableTable {
 
 		String tableName = jsonFileName.substring(jsonFileName.lastIndexOf("/"));
 		if(filePath.endsWith(".csv")){
-			return new CSVStratosphereDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
+			return new StratosphereCSVDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
 		} else{
 			//return new StratosphereDataSource(context.getCluster(), relOptTable);
 			System.err.println("file format not yet supported");

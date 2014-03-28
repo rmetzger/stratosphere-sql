@@ -74,6 +74,7 @@ public class SqlTest {
 			Assert.assertEquals("The expected elements were not in the result set", 0, copy.size());
 		}
 	
+		
 	
 		/**
 		 * Test if row rowId contains the elements in the set.

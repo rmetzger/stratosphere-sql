@@ -56,7 +56,7 @@ public class TPCHTest {
 				"	l_linestatus\n" + 
 				"order by\n" + 
 				"	l_returnflag,\n" + 
-				"	l_linestatus;");
+				"	l_linestatus");
 		result.expectRowcount(1);
 		result.expectRow(0, ImmutableList.of(3L, 60L) );
 	}
@@ -131,7 +131,7 @@ public class TPCHTest {
 				"	o_shippriority\n" + 
 				"order by\n" + 
 				"	revenue desc,\n" + 
-				"	o_orderdate;");
+				"	o_orderdate");
 	}
 	
 	@Test
@@ -156,7 +156,7 @@ public class TPCHTest {
 				"group by\n" + 
 				"	o_orderpriority\n" + 
 				"order by\n" + 
-				"	o_orderpriority;");
+				"	o_orderpriority");
 	}
 	
 	@Test
@@ -184,7 +184,7 @@ public class TPCHTest {
 				"group by\n" + 
 				"	n_name\n" + 
 				"order by\n" + 
-				"	revenue desc;");
+				"	revenue desc");
 	}
 	
 	@Test
@@ -197,7 +197,7 @@ public class TPCHTest {
 				"	l_shipdate >= date '1994-01-01'\n" + 
 				"	and l_shipdate < date '1994-01-01' + interval '1' year\n" + 
 				"	and l_discount between .06 - 0.01 and .06 + 0.01\n" + 
-				"	and l_quantity < 24;");
+				"	and l_quantity < 24");
 	}
 	
 	@Test
@@ -240,7 +240,7 @@ public class TPCHTest {
 				"order by\n" + 
 				"	supp_nation,\n" + 
 				"	cust_nation,\n" + 
-				"	l_year;");
+				"	l_year");
 	}
 	
 	@Test
@@ -281,7 +281,7 @@ public class TPCHTest {
 				"group by\n" + 
 				"	o_year\n" + 
 				"order by\n" + 
-				"	o_year;");
+				"	o_year");
 	}
 	
 	@Test
@@ -317,7 +317,7 @@ public class TPCHTest {
 				"	o_year\n" + 
 				"order by\n" + 
 				"	nation,\n" + 
-				"	o_year desc;");
+				"	o_year desc");
 	}
 	
 	@Test
@@ -352,7 +352,7 @@ public class TPCHTest {
 				"	c_address,\n" + 
 				"	c_comment\n" + 
 				"order by\n" + 
-				"	revenue desc;");
+				"	revenue desc");
 	}
 	
 	@Test
@@ -383,7 +383,7 @@ public class TPCHTest {
 				"				and n_name = 'GERMANY'\n" + 
 				"		)\n" + 
 				"order by\n" + 
-				"	value desc;");
+				"	value desc");
 	}
 	
 	@Test
@@ -415,7 +415,7 @@ public class TPCHTest {
 				"group by\n" + 
 				"	l_shipmode\n" + 
 				"order by\n" + 
-				"	l_shipmode;");
+				"	l_shipmode");
 	}
 	
 	@Test
@@ -439,7 +439,7 @@ public class TPCHTest {
 				"	c_count\n" + 
 				"order by\n" + 
 				"	custdist desc,\n" + 
-				"	c_count desc;");
+				"	c_count desc");
 	}
 	
 	@Test
@@ -456,7 +456,7 @@ public class TPCHTest {
 				"where\n" + 
 				"	l_partkey = p_partkey\n" + 
 				"	and l_shipdate >= date '1995-09-01'\n" + 
-				"	and l_shipdate < date '1995-09-01' + interval '1' month;");
+				"	and l_shipdate < date '1995-09-01' + interval '1' month");
 	}
 	
 	
@@ -496,7 +496,7 @@ public class TPCHTest {
 				"			revenue0\n" + 
 				"	)\n" + 
 				"order by\n" + 
-				"	s_suppkey;");
+				"	s_suppkey");
 	}
 	
 	@Test
@@ -530,7 +530,7 @@ public class TPCHTest {
 				"	supplier_cnt desc,\n" + 
 				"	p_brand,\n" + 
 				"	p_type,\n" + 
-				"	p_size;");
+				"	p_size");
 	}
 	
 	@Test
@@ -551,7 +551,7 @@ public class TPCHTest {
 				"			lineitem\n" + 
 				"		where\n" + 
 				"			l_partkey = p_partkey\n" + 
-				"	);");
+				"	)");
 	}
 	
 	@Test
@@ -587,7 +587,7 @@ public class TPCHTest {
 				"	o_totalprice\n" + 
 				"order by\n" + 
 				"	o_totalprice desc,\n" + 
-				"	o_orderdate;");
+				"	o_orderdate");
 	}
 	
 	@Test
@@ -626,7 +626,7 @@ public class TPCHTest {
 				"		and p_size between 1 and 15\n" + 
 				"		and l_shipmode in ('AIR', 'AIR REG')\n" + 
 				"		and l_shipinstruct = 'DELIVER IN PERSON'\n" + 
-				"	);");
+				"	)");
 	}
 	
 	@Test
@@ -667,7 +667,7 @@ public class TPCHTest {
 				"	and s_nationkey = n_nationkey\n" + 
 				"	and n_name = 'CANADA'\n" + 
 				"order by\n" + 
-				"	s_name;");
+				"	s_name");
 	}
 	
 	@Test
@@ -710,7 +710,7 @@ public class TPCHTest {
 				"	s_name\n" + 
 				"order by\n" + 
 				"	numwait desc,\n" + 
-				"	s_name;");
+				"	s_name");
 	}
 	
 	@Test
@@ -751,7 +751,7 @@ public class TPCHTest {
 				"group by\n" + 
 				"	cntrycode\n" + 
 				"order by\n" + 
-				"	cntrycode;");
+				"	cntrycode");
 	}
 	
 	

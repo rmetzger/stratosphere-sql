@@ -19,19 +19,19 @@
     },
     {
       "name": "l_quantity",
-      "type": "DECIMAL"
+      "type": "DECIMAL(15,2)"
     },
     {
       "name": "l_extendedprice",
-      "type": "DECIMAL"
+      "type": "DECIMAL(15,2)"
     },
     {
       "name": "l_discount",
-      "type": "DECIMAL"
+      "type": "DECIMAL(15,2)"
     },
     {
       "name": "l_tax",
-      "type": "DECIMAL"
+      "type": "DECIMAL(15,2)"
     },
     {
       "name": "l_returnflag",
@@ -69,5 +69,5 @@
   "primaryKey": "customerId",
   "columnDelimiter": ",",
   "rowDelimiter": "\\n",
-  "filePath": "/home/robert/Projekte/ozone/stratosphere-sql/src/main/resources/sampleTables/tpch/lineitem.tbl"
+  "filePath": "{{pwd}}/src/main/resources/sampleTables/tpch/lineitem.tbl"
 }

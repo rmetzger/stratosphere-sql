@@ -19,7 +19,7 @@ import eu.stratosphere.types.LongValue;
 import eu.stratosphere.types.ShortValue;
 import eu.stratosphere.types.StringValue;
 
-public class CSVStratosphereDataSource extends StratosphereDataSource {
+public class StratosphereCSVDataSource extends StratosphereDataSource {
 
 	private String filePath;
 	private String columnDelimiter;
@@ -27,11 +27,11 @@ public class CSVStratosphereDataSource extends StratosphereDataSource {
 	private String tableName;
 	private RelDataType rowType;
 	
-	public CSVStratosphereDataSource(RelOptCluster cluster, RelOptTable table) {
+	public StratosphereCSVDataSource(RelOptCluster cluster, RelOptTable table) {
 		super(cluster, table);
 	}
 
-	public CSVStratosphereDataSource(RelOptCluster cluster, RelOptTable table,
+	public StratosphereCSVDataSource(RelOptCluster cluster, RelOptTable table,
 			String columnDelimiter, String rowDelimiter, String filePath,
 			String tableName, RelDataType rowType) {
 		super(cluster, table);
@@ -47,7 +47,7 @@ public class CSVStratosphereDataSource extends StratosphereDataSource {
 		//here we use the delimiters set in the json schema
 		List<RelDataTypeField> fieldList = rowType.getFieldList();
 		int position = 0;
-		FileDataSource src = new FileDataSource(new CsvInputFormat(), "file://" + filePath, tableName);
+		FileDataSource src = new FileDataSource(new CsvInputFormat(), filePath, tableName);
 		
 		//it needs to loose a backslash
 		if(rowDelimiter.equals("\\n")) {
