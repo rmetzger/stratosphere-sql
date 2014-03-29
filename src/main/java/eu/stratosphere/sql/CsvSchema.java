@@ -26,11 +26,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jline.internal.Log;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonParser;
 import org.codehaus.jackson.JsonToken;
@@ -43,11 +44,14 @@ import org.eigenbase.util.Pair;
 
 import com.google.common.collect.ImmutableMap;
 
+
 /**
  * Schema mapped onto a directory of CSV files. Each table in the schema
  * is a CSV file in that directory.
  */
 public class CsvSchema extends AbstractSchema {
+	private static final Log LOG = LogFactory.getLog(CsvSchema.class);
+
 	final private  File directoryFile;
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static JsonFactory factory = mapper.getJsonFactory();
@@ -57,6 +61,7 @@ public class CsvSchema extends AbstractSchema {
 		filePathVariables.put("user.dir", System.getProperty("user.dir"));
 		filePathVariables.put("home.dir", System.getProperty("user.home"));
 		filePathVariables.put("home.name", System.getProperty("user.name"));
+		filePathVariables.put("file.separator", System.getProperty("file.separator"));
 	}
 
 
@@ -105,7 +110,7 @@ public class CsvSchema extends AbstractSchema {
 		}
 		return builder.build();
 	}
-	
+
 	public void parseJSONSchema(Table table, File file){
 		RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl() ;
 		List<Map.Entry<String, RelDataType>> fieldList = new ArrayList<Map.Entry<String, RelDataType>>();
@@ -119,17 +124,17 @@ public class CsvSchema extends AbstractSchema {
 			parser = factory.createJsonParser(reader);
 			JsonToken token = null;
 			while ((token = parser.nextToken()) != null) {
-				
+
 				if (token == JsonToken.FIELD_NAME) {
 					if(parser.getText().equals("ignore")) {
 						return; // ignore this table
-					} else if(parser.getText().equals("fields")) {							
+					} else if(parser.getText().equals("fields")) {
 						JsonToken token2 = parser.nextToken();
-						
+
 						/* event2 helps in iterating in the fields array
-						 * 
+						 *
 						 * event2: START_ARRAY			--> the start of the array
-						 * 
+						 *
 						 * event2: START_OBJECT			 --> one for each field
 						 * event2: KEY_NAME				 --> "name" token
 						 * event2: VALUE_STRING			 -->	the field's name
@@ -137,67 +142,67 @@ public class CsvSchema extends AbstractSchema {
 						 * event2: VALUE_STRING			 -->	the field's type
 						 * event2: END_OBJECT			 --> end of one field
 						 * ...
-						 * 
+						 *
 						 * breaking the iteration when event2 becomes END_ARRAY
 						 */
 						String fieldName;
 						String fieldType;
-						token2 = parser.nextToken();	 
+						token2 = parser.nextToken();
 						while(token2 != JsonToken.END_ARRAY){
 							fieldName = null;
 							fieldType = null;
 							Map.Entry<String, RelDataType> field = null;
-							token2 = parser.nextToken(); 									 
+							token2 = parser.nextToken();
 							if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("name"))) {
-								token2 = parser.nextToken(); 
+								token2 = parser.nextToken();
 								fieldName = parser.getText();
 								System.err.print("" + fieldName);
 							}
-							token2 = parser.nextToken(); 
+							token2 = parser.nextToken();
 							if((token2 == JsonToken.FIELD_NAME) && (parser.getText().toLowerCase().equals("type"))) {
-								token2 = parser.nextToken(); 
+								token2 = parser.nextToken();
 								fieldType = parser.getText();
 								System.err.println("	" + fieldType);
-								if(fieldType.toUpperCase().equals("INTEGER")){	
+								if(fieldType.toUpperCase().equals("INTEGER")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.INTEGER));
 								} else
-								if(fieldType.toUpperCase().equals("LONG")){	
+								if(fieldType.toUpperCase().equals("LONG")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.BIGINT));
 								} else
-								if(fieldType.toUpperCase().equals("SHORT")){	
+								if(fieldType.toUpperCase().equals("SHORT")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.SMALLINT));
 								}	else
-								if(fieldType.toUpperCase().equals("BYTE")){	
+								if(fieldType.toUpperCase().equals("BYTE")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.TINYINT));
 								}	else
-								if(fieldType.toUpperCase().equals("FLOAT")){	
+								if(fieldType.toUpperCase().equals("FLOAT")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.FLOAT));
 								}	else
-								if(fieldType.toUpperCase().equals("DOUBLE")){	
+								if(fieldType.toUpperCase().equals("DOUBLE")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.DOUBLE));
 								}	else
-								if(fieldType.toUpperCase().equals("CHAR")){	
+								if(fieldType.toUpperCase().equals("CHAR")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.CHAR));
 								}	else
-								if(fieldType.toUpperCase().equals("VARCHAR")){	
+								if(fieldType.toUpperCase().equals("VARCHAR")){
 									field = Pair.of(fieldName, typeFactory.createSqlType(SqlTypeName.VARCHAR));
-								}	
-								
+								}
+
 								fieldList.add(field);
 							}
 							token2 = parser.nextToken();
 							token2 = parser.nextToken();
 						}
-						
+
 					}else if (parser.getText().equals("primaryKey")){
 						token = parser.nextToken();
-						// ((StratosphereTable)table).primaryKey = parser.getText();							 
+						// ((StratosphereTable)table).primaryKey = parser.getText();
 					} else if (parser.getText().equals("columnDelimiter")){
 							token = parser.nextToken();
-							sTable.columnDelimiter = parser.getText();						 
+							sTable.columnDelimiter = parser.getText();
 					} else if (parser.getText().equals("rowDelimiter")){
 							token = parser.nextToken();
-							sTable.rowDelimiter = parser.getText();								 								 
+							sTable.rowDelimiter = parser.getText();
 					} else if (parser.getText().equals("filePath")){
 							token = parser.nextToken();
 							String inText = parser.getText();
@@ -207,21 +212,21 @@ public class CsvSchema extends AbstractSchema {
 							sTable.filePath = inText;
 					}
 				}
-				
+
 			}//while
 			sTable.setRowType(typeFactory.createStructType(fieldList));
 		} catch (IOException e) {
-			Log.warn("There was an exception", e);
+			LOG.warn("There was an exception", e);
 			} finally {
 			if (reader != null) {
 				try {
 				reader.close();
 				} catch (IOException e) {
-					Log.warn("There was an exception", e);
+					LOG.warn("There was an exception", e);
 				}
 			}
 		}
-	
+
 		//Treat exception cases
 		if(fieldList.isEmpty()){
 			System.err.println("ERROR: No fields defined for this table");
@@ -229,11 +234,11 @@ public class CsvSchema extends AbstractSchema {
 		}
 		if(sTable.filePath == null){
 			System.err.println("ERROR: No file path specified for this table data file");
-			return;			
+			return;
 		}
 	}
 
-	
+
 }
 
 // End CsvSchema.java
