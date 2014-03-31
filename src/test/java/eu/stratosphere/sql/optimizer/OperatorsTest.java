@@ -2,6 +2,7 @@ package eu.stratosphere.sql.optimizer;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -45,6 +46,7 @@ public class OperatorsTest {
 		result.expectRow(0, ImmutableList.of(3L, 60) );
 	}
 
+	@Ignore
 	@Test
 	public void countSumAvg() {
 		SqlTestResult result = test.execute("SELECT COUNT(*), SUM(depNo), AVG(1+(depNo*10)) FROM departments");
