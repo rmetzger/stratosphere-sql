@@ -7,10 +7,9 @@ import org.codehaus.jackson.JsonNode;
 
 import eu.stratosphere.sql.schema.CSVStratosphereTable;
 import eu.stratosphere.sql.schema.JsonSchema;
-import eu.stratosphere.sql.schema.JsonSchemaAdapter;
-import eu.stratosphere.sql.schema.JsonSchemaUtils;
-import eu.stratosphere.sql.schema.SchemaAdapterException;
 import eu.stratosphere.sql.schema.JsonSchema.TableAdder;
+import eu.stratosphere.sql.schema.JsonSchemaAdapter;
+import eu.stratosphere.sql.schema.SchemaAdapterException;
 
 public class CSVSchemaAdapter implements JsonSchemaAdapter {
 

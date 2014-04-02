@@ -11,11 +11,10 @@
     },
     {
       "name": "depManager",
-      "type": "VARCHAR(15)"
+      "type": "VARCHAR"
     }
   ],
-  "primaryKey": "customerId",
   "columnDelimiter": ",",
-  "rowDelimiter": "\\n",
+  "rowDelimiter": "\n",
   "filePath": "{{pwd}}/src/main/resources/sampleTables/departments.csv"
 }

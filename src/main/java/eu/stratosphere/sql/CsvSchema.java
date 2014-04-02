@@ -57,15 +57,6 @@ public class CsvSchema extends AbstractSchema  {
 	final private  File directoryFile;
 	private static ObjectMapper mapper = new ObjectMapper();
 	private static JsonFactory factory = mapper.getJsonFactory();
-	private static Map<String, String> filePathVariables = new HashMap<String, String>();
-	static {
-		filePathVariables.put("pwd", System.getProperty("user.dir"));
-		filePathVariables.put("user.dir", System.getProperty("user.dir"));
-		filePathVariables.put("home.dir", System.getProperty("user.home"));
-		filePathVariables.put("home.name", System.getProperty("user.name"));
-		filePathVariables.put("file.separator", System.getProperty("file.separator"));
-	}
-
 
 	/**
 	 * Creates a CSV schema.
@@ -83,7 +74,7 @@ public class CsvSchema extends AbstractSchema  {
 		if(!directoryFile.exists()) {
 			throw new RuntimeException("Schema repository directory "+directoryFile.getAbsolutePath()+" does not exist");
 		}
-		filePathVariables.put("schema.dir", directoryFile.getAbsolutePath());
+
 	}
 
 	@Override
@@ -209,9 +200,7 @@ public class CsvSchema extends AbstractSchema  {
 					} else if (parser.getText().equals("filePath")){
 							token = parser.nextToken();
 							String inText = parser.getText();
-							for(Map.Entry<String, String> replField : filePathVariables.entrySet()) {
-								inText = inText.replaceAll("\\{\\{"+replField.getKey()+"\\}\\}", replField.getValue());
-							}
+
 							sTable.filePath = inText;
 					}
 				}

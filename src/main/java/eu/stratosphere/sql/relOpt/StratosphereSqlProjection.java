@@ -196,10 +196,12 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 
 	@Override
 	public Operator getStratosphereOperator() {
+		System.err.println("Preparing operator "+this.getDigest());
+
 		// get Input
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
+		System.err.println("Input is "+inputOp);
 
-		System.err.println("Preparing operator "+this.getDigest());
 		final RexBuilder rexBuilder = getCluster().getRexBuilder();
 		final RexExecutorImpl executor = new RexExecutorImpl(null);
 
@@ -240,14 +242,8 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 			replaceInputRefsByExternalInputRefsVisitor.resetInputList();
 		}
 
-		// remove trivial projections
-
-				for(RexNode n: exps) {
-
-				}
 		RexExecutable executable = executor.getExecutable(rexBuilder, complexExps, getInput(0).getRowType() );
-	  //  }
-			System.err.println("Code="+executable.getSource());
+		System.err.println("Code="+executable.getSource());
 		// create MapOperator
 		MapOperator proj = MapOperator	.builder(new StratosphereSqlProjectionMapOperator(executable.getFunction(),
 																						fields, executable.getSource()))

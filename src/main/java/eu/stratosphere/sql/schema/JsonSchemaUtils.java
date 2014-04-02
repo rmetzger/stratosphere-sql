@@ -1,10 +1,13 @@
 package eu.stratosphere.sql.schema;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.avro.SchemaBuilder.FieldTypeBuilder;
 import org.codehaus.jackson.JsonNode;
+import org.eigenbase.sql.type.SqlTypeName;
 
 public class JsonSchemaUtils {
 
@@ -43,6 +46,24 @@ public class JsonSchemaUtils {
 	}
 
 	/**
+	 * Filename variables
+	 */
+	public static Map<String, String> filePathVariables = new HashMap<String, String>();
+	static {
+		filePathVariables.put("pwd", System.getProperty("user.dir"));
+		filePathVariables.put("user.dir", System.getProperty("user.dir"));
+		filePathVariables.put("home.dir", System.getProperty("user.home"));
+		filePathVariables.put("home.name", System.getProperty("user.name"));
+		filePathVariables.put("file.separator", System.getProperty("file.separator"));
+	}
+	public static String replaceFilenameVariables(String inText) {
+		for(Map.Entry<String, String> replField : filePathVariables.entrySet()) {
+			inText = inText.replaceAll("\\{\\{"+replField.getKey()+"\\}\\}", replField.getValue());
+		}
+		return inText;
+	}
+
+	/**
 	 * Parses field types
 	 * Supports:
 	 * VARCHAR
@@ -51,22 +72,22 @@ public class JsonSchemaUtils {
 	 * DECIMAL(5,2)
 	 *
 	 */
+	private final static Pattern pattern = Pattern.compile("([a-zA-Z]+)(\\(([1-9][0-9]*),?([1-9][0-9]*)?\\))?");
 	public static FieldType parseFieldType(String fieldType) {
-		String pattern = "(.*)(\\d+)(.*)";
 
 		FieldType ret = new FieldType();
 		// Create a Pattern object
-		Pattern r = Pattern.compile(pattern);
 
 		// Now create matcher object.
-		Matcher m = r.matcher(fieldType);
+		Matcher m = pattern.matcher(fieldType);
 		if (m.find()) {
-			ret.name = m.group(0);
-			if(m.groupCount() > 1) {
-				ret.arg1 = Integer.valueOf(m.group(1));
+			//System.err.println(fieldType+" Groups "+m.groupCount()+" 0"+m.group(0)+" 1"+m.group(1)+" 2"+m.group(2)+" 3"+m.group(3)+" 4"+m.group(4));
+			ret.name = SqlTypeName.valueOf(m.group(1).toUpperCase());
+			if(m.group(3) != null) {
+				ret.arg1 = Integer.valueOf(m.group(3));
 			}
-			if(m.groupCount() > 2) {
-				ret.arg2 = Integer.valueOf(m.group(2));
+			if(m.group(4) != null) {
+				ret.arg2 = Integer.valueOf(m.group(4));
 			}
 		} else {
 			throw new SchemaAdapterException("Unable to parse field type "+fieldType);
@@ -75,9 +96,8 @@ public class JsonSchemaUtils {
 		return ret;
 	}
 
-
 	public static class FieldType {
-		public String name;
+		public SqlTypeName name;
 		// min_value represents "unset". This may become a bug some day.
 		public int arg1 = Integer.MIN_VALUE;
 		public int arg2 = Integer.MIN_VALUE;

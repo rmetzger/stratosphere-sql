@@ -1,4 +1,5 @@
 {
+  "type" : "csv",
   "fields": [
     {
       "name": "customerId",
@@ -11,6 +12,6 @@
   ],
   "primaryKey": "customerId",
   "columnDelimiter": ",",
-  "rowDelimiter": "\\n",
+  "rowDelimiter": "\n",
   "filePath": "{{pwd}}/src/main/resources/sampleTables/simple.csv"
 }

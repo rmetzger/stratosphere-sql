@@ -41,6 +41,8 @@ public class JsonSchema extends AbstractSchema {
 		if(!jsonSchemaStoreDir.exists()) {
 			throw new RuntimeException("Schema repository directory "+jsonSchemaStoreDir.getAbsolutePath()+" does not exist");
 		}
+		JsonSchemaUtils.filePathVariables.put("schema.dir", jsonSchemaStoreDir.getAbsolutePath());
+
 		tableMap = new HashMap<String, Table>();
 		adder = new TableAdderImpl(tableMap);
 

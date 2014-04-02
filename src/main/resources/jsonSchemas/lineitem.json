@@ -1,5 +1,4 @@
 {
-	"ignore": "true",
   "fields": [
     {
       "name": "l_orderkey",
@@ -68,6 +67,6 @@
   ],
   "primaryKey": "customerId",
   "columnDelimiter": ",",
-  "rowDelimiter": "\\n",
+  "rowDelimiter": "\n",
   "filePath": "{{pwd}}/src/main/resources/sampleTables/tpch/lineitem.tbl"
 }
