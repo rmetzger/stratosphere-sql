@@ -55,10 +55,10 @@ public class TPCHTest {
 				"	l_shipdate <= date '1998-12-01' - interval '90' day (3)\n" +
 				"group by\n" +
 				"	l_returnflag,\n" +
-				"	l_linestatus\n" +
-				"order by\n" +
-				"	l_returnflag,\n" +
-				"	l_linestatus");
+				"	l_linestatus\n");
+//				"order by\n" +
+//				"	l_returnflag,\n" +
+//				"	l_linestatus");
 		result.expectRowcount(1);
 		result.expectRow(0, ImmutableList.of(3L, 60L) );
 	}
@@ -156,9 +156,9 @@ public class TPCHTest {
 				"			and l_commitdate < l_receiptdate\n" +
 				"	)\n" +
 				"group by\n" +
-				"	o_orderpriority\n" +
-				"order by\n" +
-				"	o_orderpriority");
+				"	o_orderpriority\n");
+//				"order by\n" +
+//				"	o_orderpriority");
 	}
 
 	@Test

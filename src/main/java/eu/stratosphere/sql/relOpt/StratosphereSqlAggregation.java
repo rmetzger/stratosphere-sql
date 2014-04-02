@@ -12,6 +12,7 @@ import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptCluster;
 import org.eigenbase.relopt.RelTraitSet;
 import org.eigenbase.reltype.RelDataType;
+import org.eigenbase.sql.fun.SqlAvgAggFunction;
 import org.eigenbase.sql.fun.SqlCountAggFunction;
 import org.eigenbase.sql.fun.SqlSumAggFunction;
 
@@ -50,6 +51,34 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		abstract void nextRecord(Record r);
 		abstract Value getResult();
 	}
+
+	public static class AvgAggregate extends SumAggregate {
+		private long count;
+
+		public AvgAggregate(int inFieldPos, Value inFieldValue, Value outFieldValue) {
+			super(inFieldPos, inFieldValue, outFieldValue);
+		}
+
+		@Override
+		void initialize() {
+			super.initialize();
+			count = 0;
+		}
+
+		@Override
+		void nextRecord(Record r) {
+			super.nextRecord(r);
+			count++;
+		}
+
+		@Override
+		Value getResult() {
+			long result = this.sum/this.count;
+			return returnFromLong(result);
+		}
+
+	}
+
 	public static class CountAggregate extends AbstractAggregate {
 		private long count = 0;
 		private LongValue result = new LongValue();
@@ -72,7 +101,7 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 
 
 	public static class SumAggregate extends AbstractAggregate {
-		private long sum;
+		protected long sum;
 		private int inFieldPos = 0;
 		private Value inFieldValue;
 		private Value outFieldValue;
@@ -95,16 +124,20 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		}
 		@Override
 		Value getResult() {
+			return returnFromLong(sum);
+		}
+		protected Value returnFromLong(long l) {
 			if(outFieldValue instanceof LongValue) {
-				( (JavaValue)outFieldValue).setObjectValue(sum);
+				( (JavaValue)outFieldValue).setObjectValue(l);
 				return outFieldValue;
 			} else if(outFieldValue instanceof IntValue) {
-				( (JavaValue)outFieldValue).setObjectValue( (int) sum );
+				( (JavaValue)outFieldValue).setObjectValue( (int) l );
 				return outFieldValue;
 			} else {
-				throw new RuntimeException("Unsupported aggregate type");
+				throw new RuntimeException("Unsupported sum aggregate field type");
 			}
 		}
+
 	}
 
 	public static class StratosphereSqlAggregationOperator extends ReduceFunction {
@@ -160,17 +193,17 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 
 	}
 
-	public static class Aggregation implements Serializable {
-		private static final long serialVersionUID = 1L;
-
-		public static enum Type { COUNT, SUM }
-
-		public Type type;
-		public Class<? extends Value> inputType;
-		public Class<? extends Value> outputType;
-		public boolean isDistinct;
-		public List<Integer> inputPositions;
-	}
+//	public static class Aggregation implements Serializable {
+//		private static final long serialVersionUID = 1L;
+//
+//		public static enum Type { COUNT, SUM }
+//
+//		public Type type;
+//		public Class<? extends Value> inputType;
+//		public Class<? extends Value> outputType;
+//		public boolean isDistinct;
+//		public List<Integer> inputPositions;
+//	}
 	@Override
 	public Operator getStratosphereOperator() {
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
@@ -179,10 +212,11 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		int nr = 0;
 		for(AggregateCall call : getAggCallList()) {
 			org.eigenbase.rel.Aggregation optiqAgg = call.getAggregation();
+
 			if(optiqAgg instanceof SqlCountAggFunction) {
 				CountAggregate count = new CountAggregate();
 				aggFns.add(count);
-			} else if(optiqAgg instanceof SqlSumAggFunction) {
+			} else if(optiqAgg instanceof SqlSumAggFunction || optiqAgg instanceof SqlAvgAggFunction) {
 				if(call.getArgList().size() != 1) {
 					throw new RuntimeException("Implement support for count with mutiple in fields");
 				}
@@ -199,21 +233,26 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 				} catch (Exception e) {
 					throw new RuntimeException("Error instantiating result Value", e);
 				}
-				SumAggregate sum = new SumAggregate(inFieldPos, inFieldValue, outFieldValue);
-				aggFns.add(sum);
+				if(optiqAgg instanceof SqlSumAggFunction) {
+					SumAggregate sum = new SumAggregate(inFieldPos, inFieldValue, outFieldValue);
+					aggFns.add(sum);
+				} else if(optiqAgg instanceof SqlAvgAggFunction) {
+					AvgAggregate avg = new AvgAggregate(inFieldPos, inFieldValue, outFieldValue);
+					aggFns.add(avg);
+				} else {
+					throw new RuntimeException("Thats really not expected");
+				}
+			} else if(optiqAgg instanceof SqlAvgAggFunction) {
+				int inFieldPos = call.getArgList().get(0);
+				RelDataType colType = getInput(0).getRowType().getFieldList().get(inFieldPos).getType();
+				Class<? extends Value> inFieldValueClass = StratosphereRelUtils.getTypeClass(colType);
+				RelDataType outColType = call.getType();
+				Class<? extends Value> outFieldValueClass = StratosphereRelUtils.getTypeClass(outColType);
+				System.err.println("inFieldValueClass"+inFieldValueClass);
 			} else {
 				throw new RuntimeException("Unsupported aggregation type: "+ optiqAgg);
 			}
 			nr++;
-//			Aggregation agg = new Aggregation();
-//			org.eigenbase.rel.Aggregation optiqAgg = call.getAggregation();
-//			if(optiqAgg instanceof SqlCountAggFunction) {
-//				agg.type = Type.COUNT;
-//			}
-//			agg.isDistinct = call.isDistinct();
-//			agg.inputPositions = call.getArgList();
-
-			//aggFns.add(agg);
 		}
 
 		Class<? extends Value>[] keyTypes = new Class[getGroupCount()];

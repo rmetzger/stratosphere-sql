@@ -1,0 +1,44 @@
+{
+  "type" : "csv",
+  "fields": [
+    {
+      "name": "o_orderkey",
+      "type": "INTEGER"
+    },
+    {
+      "name": "o_custkey",
+      "type": "INTEGER"
+    },
+    {
+      "name": "o_orderstatus",
+      "type": "CHAR(1)"
+    },
+    {
+      "name": "o_totalprice",
+      "type": "DECIMAL(15,2)"
+    },
+    {
+      "name": "o_orderdate",
+      "type": "DATE"
+    },
+    {
+      "name": "o_orderdate",
+      "type": "DATE"
+    },
+    {
+      "name": "o_orderpriority",
+      "type": "CHAR(15)"
+    },
+    {
+      "name": "o_shippriority",
+      "type": "INTEGER"
+    },
+    {
+      "name": "o_comment",
+      "type": "VARCHAR(79)"
+    }
+  ],
+  "fieldDelimiter": "|",
+  "rowDelimiter": "\n",
+  "filePath": "{{pwd}}/src/main/resources/sampleTables/tpch/orders.tbl"
+}

@@ -46,12 +46,11 @@ public class OperatorsTest {
 		result.expectRow(0, ImmutableList.of(3L, 60) );
 	}
 
-	@Ignore
 	@Test
 	public void countSumAvg() {
-		SqlTestResult result = test.execute("SELECT COUNT(*), SUM(depNo), AVG(1+(depNo*10)) FROM departments");
+		SqlTestResult result = test.execute("SELECT COUNT(*), SUM(depNo), AVG(depNo) FROM departments");
 		result.expectRowcount(1);
-		result.expectRow(0, ImmutableList.of(3L, 60) );
+		result.expectRow(0, ImmutableList.of(3L, 60, 20) );
 	}
 
 
