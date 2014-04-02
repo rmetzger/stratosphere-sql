@@ -13,6 +13,8 @@ import org.eigenbase.sql.type.SqlTypeName;
 
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.sql.StratosphereSQLException;
+import eu.stratosphere.types.DateValue;
+import eu.stratosphere.types.DecimalValue;
 import eu.stratosphere.types.DoubleValue;
 import eu.stratosphere.types.IntValue;
 import eu.stratosphere.types.Key;
@@ -45,6 +47,12 @@ public class StratosphereRelUtils {
 		}
 		if(type.getSqlTypeName() == SqlTypeName.BIGINT) {
 			return LongValue.class;
+		}
+		if(type.getSqlTypeName() == SqlTypeName.DECIMAL) {
+			return DecimalValue.class;
+		}
+		if(type.getSqlTypeName() == SqlTypeName.DATE) {
+			return DateValue.class;
 		}
 		throw new RuntimeException("Unsupported type "+type);
 	}

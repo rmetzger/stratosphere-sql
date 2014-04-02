@@ -1,4 +1,5 @@
 {
+  "type" : "csv",
   "fields": [
     {
       "name": "l_orderkey",

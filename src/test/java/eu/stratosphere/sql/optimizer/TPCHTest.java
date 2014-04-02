@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableList;
 import eu.stratosphere.sql.optimizer.SqlTest.SqlTestResult;
 import eu.stratosphere.sql.optimizer.SqlTest.SqlTestTable;
 
-@Ignore
+
 public class TPCHTest {
 	private static SqlTest test;
 	private Object monitor = new Object();
