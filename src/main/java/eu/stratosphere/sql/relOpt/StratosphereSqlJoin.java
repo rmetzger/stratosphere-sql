@@ -29,15 +29,15 @@ import eu.stratosphere.types.Key;
 
 public class StratosphereSqlJoin extends JoinRelBase implements RelNode, StratosphereRel {
 	private static final Log LOG = LogFactory.getLog(StratosphereSqlJoin.class);
-	
+
 	private List<Integer> leftKeys;
 	private List<Integer> rightKeys;
-	
+
 	public StratosphereSqlJoin(RelOptCluster cluster, RelTraitSet traits,
 			RelNode left, RelNode right, RexNode condition,
 			JoinRelType joinType, Set<String> variablesStopped) {
 		super(cluster, traits, left, right, condition, joinType, variablesStopped);
-		
+
 		Preconditions.checkArgument(getConvention() == CONVENTION);
 		Preconditions.checkArgument(joinType == JoinRelType.INNER, "Only inner joins are supported at the moment");
 	}
@@ -46,7 +46,7 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 	public JoinRelBase copy(RelTraitSet traitSet, RexNode conditionExpr,
 			RelNode left, RelNode right, JoinRelType joinType) {
 		System.err.println("StratoJoin.copy()");
-		return new StratosphereSqlJoin(getCluster(), traitSet, left, 
+		return new StratosphereSqlJoin(getCluster(), traitSet, left,
 				right, conditionExpr, joinType, getVariablesStopped());
 	}
 
@@ -69,14 +69,14 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 		RelNode rightRel = getInput(1);
 		Operator leftOperator = StratosphereRelUtils.toStratoRel(leftRel).getStratosphereOperator();
 		Operator rightOperator = StratosphereRelUtils.toStratoRel(rightRel).getStratosphereOperator();
-		
+
 		Class<? extends Key>[] types = new Class[leftKeys.size()];
 		for(int i = 0; i < leftKeys.size(); i++) {
-			
+
 			//leftRel.getExpectedInputRowType(leftKeys.get(i));
 			RelDataType leftRow = leftRel.getRowType().getFieldList().get(leftKeys.get(i)).getType();
 			Class<? extends Key> leftType = StratosphereRelUtils.getKeyTypeClass(leftRow);
-			
+
 			RelDataType rightRow = rightRel.getRowType().getFieldList().get(rightKeys.get(i)).getType();
 			Class<? extends Key> rightType = StratosphereRelUtils.getKeyTypeClass(rightRow);
 			// check for equality
@@ -91,7 +91,7 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 			Filter f = new Filter();
 			f.setCondition(remaining);
 			f.setRexBuilder(getCluster().getRexBuilder());
-			f.prepareShipping();
+			f.prepareShipping(getRowType());
 			CrossWithLargeOperator.Builder crossBuilder = CrossWithLargeOperator.builder(new StratosphereSqlCrossOperator(f) );
 			double leftEst = RelMetadataQuery.getRowCount(leftRel);
 			double rightEst = RelMetadataQuery.getRowCount(rightRel);
@@ -105,9 +105,9 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 			}
 			return crossBuilder.build();
 		}
-		
-		
-		JoinOperator.Builder joinBuilder = JoinOperator.builder(new StratosphereSqlJoinOperator(), 
+
+
+		JoinOperator.Builder joinBuilder = JoinOperator.builder(new StratosphereSqlJoinOperator(),
 				types[0], leftKeys.get(0), rightKeys.get(0));
 		for(int i = 1; i < leftKeys.size(); i++) {
 			joinBuilder.keyField(types[i], leftKeys.get(i), rightKeys.get(i));

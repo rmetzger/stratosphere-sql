@@ -14,29 +14,29 @@ import eu.stratosphere.types.Value;
 
 public class StratosphereRexUtils {
 
-	public static class ReplaceInputRefVisitor extends RexVisitorImpl<Void> {
+	public static class GetInputRefVisitor extends RexVisitorImpl<Void> {
 		private List<Pair<Integer, RelDataType>> inputPosAndType = new ArrayList<Pair<Integer, RelDataType>>();
-	
-		public ReplaceInputRefVisitor() {
+
+		public GetInputRefVisitor() {
 			super(true);
-	
+
 		}
-	
+
 		public Void visitInputRef(RexInputRef inputRef) {
-			if (true) { // do I need a condition here?
-				inputRef.setExternalRef(true);
-			}
-			System.err.println("Setting input ref " + inputRef + " index "
-					+ inputRef.getIndex());
+//			if (true) { // do I need a condition here?
+//				inputRef.setExternalRef(true);
+//			}
+//			System.err.println("Setting input ref " + inputRef + " index "
+//					+ inputRef.getIndex());
 			inputPosAndType
 					.add(Pair.of(inputRef.getIndex(), inputRef.getType()));
 			return null;
 		}
-	
+
 		public void resetInputList() {
 			inputPosAndType.clear();
 		}
-	
+
 		public List<Pair<Integer, RelDataType>> getInputPosAndType() {
 			return inputPosAndType;
 		}
@@ -52,8 +52,8 @@ public class StratosphereRexUtils {
 		public int fieldIndex;
 		public boolean trivialProjection; // projection that does not need to execute generated code.
 		public String name;
-		
-		
+
+
 		@Override
 		public String toString() {
 			return "[ProjectionFieldProperties: inFieldType="+inFieldType+", "
@@ -75,8 +75,8 @@ public class StratosphereRexUtils {
 			hash.append(trivialProjection);
 			return hash.toHashCode();
 		}
-		
-		
+
+
 		public boolean equals(Object obj) {
 			if(obj instanceof ProjectionFieldProperties) {
 				ProjectionFieldProperties other = (ProjectionFieldProperties) obj;

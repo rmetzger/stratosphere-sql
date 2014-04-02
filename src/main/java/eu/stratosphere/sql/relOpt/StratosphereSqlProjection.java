@@ -2,6 +2,7 @@ package eu.stratosphere.sql.relOpt;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -201,14 +202,19 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 		System.err.println("Preparing operator "+this.getDigest());
 		final RexBuilder rexBuilder = getCluster().getRexBuilder();
 		final RexExecutorImpl executor = new RexExecutorImpl(null);
-		final ImmutableList<RexNode> localExps = ImmutableList.copyOf(exps);
 
-		StratosphereRexUtils.ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.ReplaceInputRefVisitor();
+		final List<RexNode> complexExps = new ArrayList<RexNode>();
+
+
+		StratosphereRexUtils.GetInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.GetInputRefVisitor();
 
 		Set<StratosphereRexUtils.ProjectionFieldProperties> fields = new HashSet<StratosphereRexUtils.ProjectionFieldProperties>();
 		int pos = 0;
 		int rexpos = 0;
-		for(RexNode rex : localExps) {
+		for(RexNode rex : exps) {
+			if(rex.getKind() != SqlKind.INPUT_REF) {
+				complexExps.add(rex);
+			}
 			rex.accept(replaceInputRefsByExternalInputRefsVisitor);
 			boolean trivialProjection = rex.getKind() == SqlKind.INPUT_REF;
 			for(Pair<Integer, RelDataType> rexInput : replaceInputRefsByExternalInputRefsVisitor.getInputPosAndType() ) {
@@ -233,11 +239,15 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 			}
 			replaceInputRefsByExternalInputRefsVisitor.resetInputList();
 		}
-	  //  if(localExps.size() > 1 && !(localExps.get(0) instanceof RexInputRef)) {
-			// has to be called after ReplaceInputRefVisitor shuttle went over tree to ensure "external" flag on InputRef
-			RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
-	  //  }
 
+		// remove trivial projections
+
+				for(RexNode n: exps) {
+
+				}
+		RexExecutable executable = executor.getExecutable(rexBuilder, complexExps, getInput(0).getRowType() );
+	  //  }
+			System.err.println("Code="+executable.getSource());
 		// create MapOperator
 		MapOperator proj = MapOperator	.builder(new StratosphereSqlProjectionMapOperator(executable.getFunction(),
 																						fields, executable.getSource()))

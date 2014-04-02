@@ -21,12 +21,18 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import net.hydromatic.linq4j.QueryProvider;
+import net.hydromatic.linq4j.Queryable;
+import net.hydromatic.linq4j.expressions.Expression;
+import net.hydromatic.optiq.QueryableTable;
 import net.hydromatic.optiq.SchemaPlus;
+import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
@@ -49,7 +55,7 @@ import com.google.common.collect.ImmutableMap;
  * Schema mapped onto a directory of CSV files. Each table in the schema
  * is a CSV file in that directory.
  */
-public class CsvSchema extends AbstractSchema {
+public class CsvSchema extends AbstractSchema  {
 	private static final Log LOG = LogFactory.getLog(CsvSchema.class);
 
 	final private  File directoryFile;
@@ -75,7 +81,8 @@ public class CsvSchema extends AbstractSchema {
 	 *					 query optimization
 	 */
 	public CsvSchema(SchemaPlus parentSchema, String name, File directoryFile) {
-		super(parentSchema, name);
+		//super(parentSchema, name);
+
 		this.directoryFile = directoryFile;
 		if(!directoryFile.exists()) {
 			throw new RuntimeException("Schema repository directory "+directoryFile.getAbsolutePath()+" does not exist");
@@ -237,7 +244,6 @@ public class CsvSchema extends AbstractSchema {
 			return;
 		}
 	}
-
 
 }
 

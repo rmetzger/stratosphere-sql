@@ -9,13 +9,13 @@ import net.hydromatic.optiq.impl.java.JavaTypeFactory;
 
 public class StratosphereDataContext implements DataContext {
 	private static final int MAX_CONTEXT_SIZE = 1024;
-	
+	public static final String REC_FIELD = "inputRecord";
 	// enforce ArrayList for faster access (compared to LL)
 	Object[] elements;
 	public StratosphereDataContext() {
 		this.elements = new Object[1];
 	}
-	
+
 	@Override
 	public SchemaPlus getRootSchema() {
 		throw new RuntimeException("unsupported");
@@ -33,10 +33,13 @@ public class StratosphereDataContext implements DataContext {
 
 	@Override
 	public Object get(String name) {
-		throw new RuntimeException("Please use array-based access");
+		if(name.equals(REC_FIELD)) {
+			return elements;
+		} else {
+			throw new RuntimeException("Unknown element "+name);
+		}
 	}
-	
-	@Override
+
 	public Object get(int i) {
 		if(i < 0) {
 			throw new IndexOutOfBoundsException("Accessing index smaller zero");
@@ -46,7 +49,7 @@ public class StratosphereDataContext implements DataContext {
 		}
 		return elements[i];
 	}
-	
+
 	public void set(int i, Object v) {
 		if(i < 0) {
 			throw new IndexOutOfBoundsException("Accessing index smaller zero");

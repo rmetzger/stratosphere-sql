@@ -1,6 +1,13 @@
 package eu.stratosphere.sql;
 
+import java.lang.reflect.Type;
+
+import net.hydromatic.linq4j.QueryProvider;
+import net.hydromatic.linq4j.Queryable;
+import net.hydromatic.linq4j.expressions.Expression;
+import net.hydromatic.optiq.QueryableTable;
 import net.hydromatic.optiq.Schema.TableType;
+import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
 import net.hydromatic.optiq.TranslatableTable;
@@ -13,7 +20,7 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 
 import eu.stratosphere.sql.relOpt.StratosphereCSVDataSource;
 
-public class StratosphereTable implements TranslatableTable {
+public class StratosphereTable implements TranslatableTable, QueryableTable {
 
 	private RelDataType rowType;
 	//CHECKSTYLE:OFF
@@ -23,13 +30,13 @@ public class StratosphereTable implements TranslatableTable {
 	public String rowDelimiter = "\n"; //default is assumed to be newline
 	public String jsonFileName;
 	//CHECKSTYLE:ON
-	
-	
+
+
 	@Override
-	public RelDataType getRowType(RelDataTypeFactory typeFactory) {		
+	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
 		return this.rowType;
 	}
-	
+
 	public void setRowType (RelDataType relData) {
 		this.rowType = relData;
 	}
@@ -55,7 +62,27 @@ public class StratosphereTable implements TranslatableTable {
 			System.err.println("file format not yet supported");
 			return null;
 		}
-		
-	} 
+
+	}
+
+	@Override
+	public <T> Queryable<T> asQueryable(QueryProvider queryProvider,
+			SchemaPlus schema, String tableName) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Type getElementType() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Expression getExpression(SchemaPlus schema, String tableName,
+			Class clazz) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }

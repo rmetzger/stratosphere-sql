@@ -55,12 +55,13 @@ public class Filter implements Serializable {
 
 	/**
 	 * Create the list of fields.
+	 * @param rowType
 	 */
-	public void prepareShipping() {
+	public void prepareShipping(RelDataType rowType) {
 		Preconditions.checkNotNull(condition);
 		Preconditions.checkNotNull(rexBuilder);
 
-		StratosphereRexUtils.ReplaceInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.ReplaceInputRefVisitor();
+		StratosphereRexUtils.GetInputRefVisitor replaceInputRefsByExternalInputRefsVisitor = new StratosphereRexUtils.GetInputRefVisitor();
 		condition.accept(replaceInputRefsByExternalInputRefsVisitor);
 
 		final ImmutableList<RexNode> localExps = ImmutableList.of(condition);
@@ -76,7 +77,7 @@ public class Filter implements Serializable {
 			fields.add(field);
 		}
 		final RexExecutorImpl executor = new RexExecutorImpl(null);
-		RexExecutable executable = executor.createExecutable(rexBuilder, localExps);
+		RexExecutable executable = executor.getExecutable(rexBuilder, localExps, rowType);
 		System.err.println("Code: "+executable.getSource());
 		this.source = executable.getSource();
 	}

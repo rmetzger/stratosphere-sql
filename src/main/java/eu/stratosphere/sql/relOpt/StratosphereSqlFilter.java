@@ -27,20 +27,20 @@ public class StratosphereSqlFilter	extends FilterRelBase implements Stratosphere
 		System.err.println("StratosphereSqlFilter.copy()");
 		return new StratosphereSqlFilter(getCluster(), traitSet, sole(inputs), getCondition());
 	}
-	
+
 	@Override
 	public Operator getStratosphereOperator() {
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
 		final RexNode cond = getCondition();
-		
+
 		Filter f = new Filter();
 		f.setCondition(cond);
 		f.setRexBuilder(getCluster().getRexBuilder());
-		f.prepareShipping();
-		
+		f.prepareShipping(getInput(0).getRowType());
+
         //final RexExecutorImpl executor = new RexExecutorImpl(null);
-        
-        
+
+
 		Operator filter = MapOperator.builder(new StratosphereSqlFilterMapOperator(f) )
 									.input(inputOp)
 									.name(condition.toString())
