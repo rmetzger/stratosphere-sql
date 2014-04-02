@@ -7,11 +7,11 @@
     },
     {
       "name": "depName",
-      "type": "VARCHAR"
+      "type": "VARCHAR(15)"
     },
     {
       "name": "depManager",
-      "type": "VARCHAR"
+      "type": "VARCHAR(15)"
     }
   ],
   "primaryKey": "customerId",

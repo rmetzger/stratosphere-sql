@@ -40,6 +40,7 @@ import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereJoinRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
+import eu.stratosphere.sql.schema.StratosphereSchemaFactory;
 import eu.stratosphere.types.Record;
 
 

@@ -1,4 +1,4 @@
-package eu.stratosphere.sql;
+package eu.stratosphere.sql.schema;
 
 import java.io.File;
 
@@ -14,8 +14,10 @@ public class StratosphereSchemaFactory implements Function1<SchemaPlus, Schema> 
 	}
 	@Override
 	public Schema apply(SchemaPlus incoming) {
-		Schema schema = new CsvSchema(incoming, "mySchema", jsonSchemaStoreDir);
-		return incoming.add("Stratosphere", schema);
+		Schema jsonSchema = new JsonSchema(incoming, jsonSchemaStoreDir);
+		// add HCatalog schema here.
+		// add StratosphereOperatorSchema here.
+		return incoming.add("Stratosphere", jsonSchema);
 	}
 
 }

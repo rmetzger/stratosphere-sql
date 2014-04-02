@@ -21,18 +21,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import net.hydromatic.linq4j.QueryProvider;
-import net.hydromatic.linq4j.Queryable;
-import net.hydromatic.linq4j.expressions.Expression;
-import net.hydromatic.optiq.QueryableTable;
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
@@ -49,6 +43,8 @@ import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Pair;
 
 import com.google.common.collect.ImmutableMap;
+
+import eu.stratosphere.sql.schema.AbstractStratosphereTable;
 
 
 /**
@@ -110,7 +106,7 @@ public class CsvSchema extends AbstractSchema  {
 			if (tableName.endsWith(".json")) {
 				tableName = tableName.substring(0, tableName.length() - ".json".length());
 				System.err.println("TABLE " + tableName.toUpperCase());
-				Table table = new StratosphereTable();
+				Table table = new AbstractStratosphereTable();
 				this.parseJSONSchema(table, file);
 				builder.put(tableName, table);
 			}
@@ -121,7 +117,7 @@ public class CsvSchema extends AbstractSchema  {
 	public void parseJSONSchema(Table table, File file){
 		RelDataTypeFactory typeFactory = new SqlTypeFactoryImpl() ;
 		List<Map.Entry<String, RelDataType>> fieldList = new ArrayList<Map.Entry<String, RelDataType>>();
-		StratosphereTable sTable = (StratosphereTable) table;
+		AbstractStratosphereTable sTable = (AbstractStratosphereTable) table;
 		//read the table structure from a JSON file
 		sTable.jsonFileName = file.getAbsolutePath();
 		JsonParser parser = null;
