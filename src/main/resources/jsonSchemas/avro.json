@@ -1,0 +1,4 @@
+{
+  "type" : "avro",
+  "filePath": "{{pwd}}/src/main/resources/sampleTables/sample.avro"
+}

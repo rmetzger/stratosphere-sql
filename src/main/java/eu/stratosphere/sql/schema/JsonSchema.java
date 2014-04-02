@@ -16,6 +16,13 @@ import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
+/**
+ * dispatcher for all JsonSchema based schema adapters.
+ *
+ * To implement a new JsonSchema-based adapter, you have to implement the
+ * {@link JsonSchemaAdapter} interface. Then, register the class here.
+ *
+ */
 public class JsonSchema extends AbstractSchema {
 
 	public static Map<String, JsonSchemaAdapter> adapters = new HashMap<String, JsonSchemaAdapter>();
@@ -29,7 +36,7 @@ public class JsonSchema extends AbstractSchema {
 	static {
 		try {
 			Class.forName("eu.stratosphere.sql.schema.jsonAdapters.CSVSchemaAdapter");
-			// add your custom schemas here.
+			Class.forName("eu.stratosphere.sql.schema.jsonAdapters.AvroSchemaAdapter");
 
 			// TODO: (idea) add a way for "users" to register their own, external schema adapters.
 		} catch (ClassNotFoundException e) {

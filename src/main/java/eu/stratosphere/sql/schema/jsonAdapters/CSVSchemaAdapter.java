@@ -22,8 +22,6 @@ public class CSVSchemaAdapter implements JsonSchemaAdapter {
 		return "csv";
 	}
 
-
-
 	@Override
 	public void getTablesFromJson(JsonNode rootNode, TableAdder tableAdder, File file) throws SchemaAdapterException {
 		System.err.println("Parsing JSON schema from "+rootNode);

@@ -18,7 +18,6 @@ import org.eigenbase.relopt.RelOptTable.ToRelContext;
 import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 
-import eu.stratosphere.sql.relOpt.StratosphereCSVDataSource;
 
 public abstract class AbstractStratosphereTable implements TranslatableTable, QueryableTable {
 

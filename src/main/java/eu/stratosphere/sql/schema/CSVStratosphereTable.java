@@ -90,16 +90,3 @@ public class CSVStratosphereTable extends AbstractStratosphereTable {
 	}
 
 }
-
-//if(typeinfo.name.allowsPrecScale(true, false)) {
-//// types with one (optional) precision argument
-//if(typeinfo.arg1 != Integer.MIN_VALUE) {
-//	optiqField = Pair.of(fieldName, typeFactory.createSqlType(typeinfo.name, typeinfo.arg1));
-//} else {
-//	optiqField = Pair.of(fieldName, typeFactory.createSqlType(typeinfo.name));
-//}
-//optiqFields.add(optiqField);
-//} else if(typeinfo.name.allowsPrecScale(true, true)) {
-//// types with both (optional) scale and precision
-//}
-
