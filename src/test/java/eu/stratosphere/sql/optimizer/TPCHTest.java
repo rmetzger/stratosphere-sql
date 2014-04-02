@@ -33,7 +33,7 @@ public class TPCHTest {
 	public void countStar() {
 		SqlTestResult result = test.execute("SELECT COUNT(*) FROM lineitem");
 		result.expectRowcount(1);
-		result.expectRow(0, ImmutableList.of(3) );
+		result.expectRow(0, ImmutableList.of(6L) );
 	}
 
 	@Test

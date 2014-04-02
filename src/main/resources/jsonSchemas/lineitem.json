@@ -47,7 +47,9 @@
     },
     {
       "name": "l_commitdate",
-      "type": "DATE"
+      "type": "DATE",
+      "format": "yyyy-MM-dd",
+      "comment": "the format for DATE is optional. 'yyyy-MM-dd' is actually the default"
     },
     {
       "name": "l_receiptdate",
@@ -67,7 +69,7 @@
     }
   ],
   "primaryKey": "customerId",
-  "columnDelimiter": ",",
+  "fieldDelimiter": "|",
   "rowDelimiter": "\n",
   "filePath": "{{pwd}}/src/main/resources/sampleTables/tpch/lineitem.tbl"
 }

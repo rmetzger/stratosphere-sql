@@ -21,48 +21,12 @@ import org.eigenbase.reltype.RelDataTypeFactory;
 
 public abstract class AbstractStratosphereTable implements TranslatableTable, QueryableTable {
 
-//	private RelDataType rowType;
-//	//CHECKSTYLE:OFF
-////	public String primaryKey;
-//	public String filePath;
-//	public String columnDelimiter = ","; //default is assumed to be comma
-//	public String rowDelimiter = "\n"; //default is assumed to be newline
-//	public String jsonFileName;
-//	//CHECKSTYLE:ON
-
-
-//	@Override
-//	public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-//		return this.rowType;
-//	}
-//
-//	public void setRowType (RelDataType relData) {
-//		this.rowType = relData;
-//	}
-
-//	@Override
-//	public Statistic getStatistic() {
-//		return Statistics.UNKNOWN;
-//	}
 
 	@Override
 	public TableType getJdbcTableType() {
 		return TableType.TABLE;
 	}
 
-//	@Override
-//	public RelNode toRel(ToRelContext context, RelOptTable relOptTable) {
-//
-//		String tableName = jsonFileName.substring(jsonFileName.lastIndexOf("/"));
-//		if(filePath.endsWith(".csv")){
-//			return new StratosphereCSVDataSource(context.getCluster(), relOptTable, columnDelimiter, rowDelimiter, filePath, tableName, rowType);
-//		} else{
-//			//return new StratosphereDataSource(context.getCluster(), relOptTable);
-//			System.err.println("file format not yet supported");
-//			return null;
-//		}
-//
-//	}
 
 	@Override
 	public <T> Queryable<T> asQueryable(QueryProvider queryProvider,
