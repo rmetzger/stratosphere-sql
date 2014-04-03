@@ -1,6 +1,5 @@
 package eu.stratosphere.sql.relOpt;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Iterator;
@@ -22,10 +21,14 @@ import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.ReduceFunction;
 import eu.stratosphere.api.java.record.operators.ReduceOperator;
 import eu.stratosphere.configuration.Configuration;
-import eu.stratosphere.types.IntValue;
-import eu.stratosphere.types.JavaValue;
+import eu.stratosphere.sql.relOpt.aggregate.Aggregates.AbstractAggregate;
+import eu.stratosphere.sql.relOpt.aggregate.Aggregates.AvgAggregate;
+import eu.stratosphere.sql.relOpt.aggregate.Aggregates.CountAggregate;
+import eu.stratosphere.sql.relOpt.aggregate.Aggregates.DecimalAvgAggregate;
+import eu.stratosphere.sql.relOpt.aggregate.Aggregates.DecimalSumAggregate;
+import eu.stratosphere.sql.relOpt.aggregate.Aggregates.SumAggregate;
+import eu.stratosphere.types.DecimalValue;
 import eu.stratosphere.types.Key;
-import eu.stratosphere.types.LongValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
 import eu.stratosphere.util.Collector;
@@ -46,99 +49,7 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		return new StratosphereSqlAggregation(getCluster(), traitSet, input, groupSet, aggCalls);
 	}
 
-	public static abstract class AbstractAggregate implements Serializable {
-		abstract void initialize();
-		abstract void nextRecord(Record r);
-		abstract Value getResult();
-	}
 
-	public static class AvgAggregate extends SumAggregate {
-		private long count;
-
-		public AvgAggregate(int inFieldPos, Value inFieldValue, Value outFieldValue) {
-			super(inFieldPos, inFieldValue, outFieldValue);
-		}
-
-		@Override
-		void initialize() {
-			super.initialize();
-			count = 0;
-		}
-
-		@Override
-		void nextRecord(Record r) {
-			super.nextRecord(r);
-			count++;
-		}
-
-		@Override
-		Value getResult() {
-			long result = this.sum/this.count;
-			return returnFromLong(result);
-		}
-
-	}
-
-	public static class CountAggregate extends AbstractAggregate {
-		private long count = 0;
-		private LongValue result = new LongValue();
-		@Override
-		void initialize() {
-			count = 0;
-		}
-
-		@Override
-		void nextRecord(Record r) {
-			count++;
-		}
-
-		@Override
-		Value getResult() {
-			result.setValue(count);
-			return result;
-		}
-	}
-
-
-	public static class SumAggregate extends AbstractAggregate {
-		protected long sum;
-		private int inFieldPos = 0;
-		private Value inFieldValue;
-		private Value outFieldValue;
-
-		public SumAggregate(int inFieldPos, Value inFieldValue, Value outFieldValue) {
-			this.inFieldPos = inFieldPos;
-			this.inFieldValue = inFieldValue;
-			this.outFieldValue = outFieldValue;
-		}
-
-		@Override
-		void initialize() {
-			sum = 0L;
-		}
-		@Override
-		void nextRecord(Record r) {
-			r.getFieldInto(inFieldPos, inFieldValue);
-			// todo might also be int?
-			sum +=  ( (Number) ( (JavaValue) inFieldValue).getObjectValue() ).longValue();
-		}
-		@Override
-		Value getResult() {
-			return returnFromLong(sum);
-		}
-		protected Value returnFromLong(long l) {
-			if(outFieldValue instanceof LongValue) {
-				( (JavaValue)outFieldValue).setObjectValue(l);
-				return outFieldValue;
-			} else if(outFieldValue instanceof IntValue) {
-				( (JavaValue)outFieldValue).setObjectValue( (int) l );
-				return outFieldValue;
-			} else {
-				throw new RuntimeException("Unsupported sum aggregate field type");
-			}
-		}
-
-	}
 
 	public static class StratosphereSqlAggregationOperator extends ReduceFunction {
 		private static final long serialVersionUID = 1L;
@@ -193,17 +104,6 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 
 	}
 
-//	public static class Aggregation implements Serializable {
-//		private static final long serialVersionUID = 1L;
-//
-//		public static enum Type { COUNT, SUM }
-//
-//		public Type type;
-//		public Class<? extends Value> inputType;
-//		public Class<? extends Value> outputType;
-//		public boolean isDistinct;
-//		public List<Integer> inputPositions;
-//	}
 	@Override
 	public Operator getStratosphereOperator() {
 		Operator inputOp = StratosphereRelUtils.openSingleInputOperator(getInputs());
@@ -234,21 +134,32 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 					throw new RuntimeException("Error instantiating result Value", e);
 				}
 				if(optiqAgg instanceof SqlSumAggFunction) {
-					SumAggregate sum = new SumAggregate(inFieldPos, inFieldValue, outFieldValue);
-					aggFns.add(sum);
+					if(outFieldValueClass == DecimalValue.class) {
+						DecimalSumAggregate sum = new DecimalSumAggregate(inFieldPos);
+						aggFns.add(sum);
+					} else {
+						SumAggregate sum = new SumAggregate(inFieldPos, inFieldValue, outFieldValue);
+						aggFns.add(sum);
+					}
 				} else if(optiqAgg instanceof SqlAvgAggFunction) {
-					AvgAggregate avg = new AvgAggregate(inFieldPos, inFieldValue, outFieldValue);
-					aggFns.add(avg);
+					if(outFieldValueClass == DecimalValue.class) {
+						DecimalAvgAggregate decimalAvg = new DecimalAvgAggregate(inFieldPos);
+						aggFns.add(decimalAvg);
+					} else {
+						AvgAggregate avg = new AvgAggregate(inFieldPos, inFieldValue, outFieldValue);
+						aggFns.add(avg);
+					}
 				} else {
 					throw new RuntimeException("Thats really not expected");
 				}
-			} else if(optiqAgg instanceof SqlAvgAggFunction) {
-				int inFieldPos = call.getArgList().get(0);
-				RelDataType colType = getInput(0).getRowType().getFieldList().get(inFieldPos).getType();
-				Class<? extends Value> inFieldValueClass = StratosphereRelUtils.getTypeClass(colType);
-				RelDataType outColType = call.getType();
-				Class<? extends Value> outFieldValueClass = StratosphereRelUtils.getTypeClass(outColType);
-				System.err.println("inFieldValueClass"+inFieldValueClass);
+			//} 
+//			else if(optiqAgg instanceof SqlAvgAggFunction) {
+//				int inFieldPos = call.getArgList().get(0);
+//				RelDataType colType = getInput(0).getRowType().getFieldList().get(inFieldPos).getType();
+//				Class<? extends Value> inFieldValueClass = StratosphereRelUtils.getTypeClass(colType);
+//				RelDataType outColType = call.getType();
+//				Class<? extends Value> outFieldValueClass = StratosphereRelUtils.getTypeClass(outColType);
+//				System.err.println("inFieldValueClass"+inFieldValueClass);
 			} else {
 				throw new RuntimeException("Unsupported aggregation type: "+ optiqAgg);
 			}

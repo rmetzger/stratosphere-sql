@@ -1,6 +1,8 @@
 package eu.stratosphere.sql.relOpt;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import org.eigenbase.rel.RelNode;
@@ -77,6 +79,12 @@ public class StratosphereRelUtils {
 		}
 		if(clazz == Long.class) {
 			return LongValue.class;
+		}
+		if(clazz == BigDecimal.class) {
+			return DecimalValue.class;
+		}
+		if(clazz == Date.class) {
+			return DateValue.class;
 		}
 		throw new RuntimeException("Unsupported class "+clazz);
 	}

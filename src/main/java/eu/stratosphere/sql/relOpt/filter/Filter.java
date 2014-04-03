@@ -2,6 +2,7 @@ package eu.stratosphere.sql.relOpt.filter;
 
 import java.io.Serializable;
 import java.io.StringReader;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import eu.stratosphere.sql.relOpt.StratosphereDataContext;
 import eu.stratosphere.sql.relOpt.StratosphereRelUtils;
 import eu.stratosphere.sql.relOpt.StratosphereRexUtils;
+import eu.stratosphere.types.DateValue;
 import eu.stratosphere.types.JavaValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
@@ -123,7 +125,12 @@ public class Filter implements Serializable {
 				}
 				record2.getFieldInto(field.positionInInput-record.getNumFields(), valuesCache[field.fieldIndex]);
 			}
-			dataContext.set(field.positionInInput, ((JavaValue) valuesCache[field.fieldIndex]).getObjectValue());
+			Object value = ((JavaValue) valuesCache[field.fieldIndex]).getObjectValue();
+			if(field.inFieldType == DateValue.class) {
+				System.err.println("Converting the date ("+value+") to int");
+				value = (int) ( (Date) value).getTime(); // cast to int.
+			}
+			dataContext.set(field.positionInInput, value );
 		}
 		Object[] result = function.apply(dataContext);
 		for(Object o : result) {

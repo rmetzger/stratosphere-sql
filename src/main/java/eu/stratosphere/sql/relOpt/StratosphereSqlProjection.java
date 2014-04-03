@@ -3,6 +3,7 @@ package eu.stratosphere.sql.relOpt;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -36,6 +37,7 @@ import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.MapFunction;
 import eu.stratosphere.api.java.record.operators.MapOperator;
 import eu.stratosphere.configuration.Configuration;
+import eu.stratosphere.types.DateValue;
 import eu.stratosphere.types.JavaValue;
 import eu.stratosphere.types.Record;
 import eu.stratosphere.types.Value;
@@ -165,7 +167,12 @@ public class StratosphereSqlProjection extends ProjectRelBase implements Stratos
 						val[field.fieldIndex] = ReflectionUtil.newInstance(field.inFieldType);
 					}
 					record.getFieldInto(field.positionInInput, val[field.fieldIndex]);
-					dataContext.set(field.positionInInput, ((JavaValue) val[field.fieldIndex]).getObjectValue()); // was positionInRex.
+					Object value = ((JavaValue) val[field.fieldIndex]).getObjectValue();
+					if(field.inFieldType == DateValue.class) {
+						System.err.println("Converting the date ("+value+") to int");
+						value = (int) ( (Date) value).getTime(); // cast to int.
+					}
+					dataContext.set(field.positionInInput, value); // was positionInRex.
 				}
 
 				// call generated code

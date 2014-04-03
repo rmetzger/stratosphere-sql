@@ -1,5 +1,7 @@
 package eu.stratosphere.sql.optimizer;
 
+import java.math.BigDecimal;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -35,7 +37,18 @@ public class TPCHTest {
 		result.expectRowcount(1);
 		result.expectRow(0, ImmutableList.of(6L) );
 	}
+	
+	
+	public Object[] apply(Object root0) {
+		return new Object[] { net.hydromatic.optiq.runtime.SqlFunctions
+				.toInt(((Object[]) ((net.hydromatic.optiq.DataContext) root0)
+						.get("inputRecord"))[10]) <= 10561 - (int) 7776000000L };
+	}
 
+	/**
+	 * Result from mysql
+	 * | N            | O            |  145.00 |      130645.00 |    119941.1200 | 124828.144000 | 24.166667 | 21774.166667 | 0.081667 |           6 |
+	 */
 	@Test
 	public void queryOne() {
 		SqlTestResult result = test.execute("select\n" +
@@ -60,7 +73,9 @@ public class TPCHTest {
 //				"	l_returnflag,\n" +
 //				"	l_linestatus");
 		result.expectRowcount(1);
-		result.expectRow(0, ImmutableList.of(3L, 60L) );
+		result.expectRow(0, ImmutableList.of("N", "O", new BigDecimal("145.00"), new BigDecimal("130645.00"),
+				new BigDecimal("119941.1200"), new BigDecimal("124828.144000"), new BigDecimal("24.166667"),
+				new BigDecimal("21774.166667"), new BigDecimal("0.081667"), 6L));
 	}
 
 	@Test

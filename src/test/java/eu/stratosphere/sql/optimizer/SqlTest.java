@@ -79,16 +79,32 @@ public class SqlTest {
 		 * @param rowId
 		 * @param elements
 		 */
+		public Object[] recordToJava(Record r, List targetTypes) {
+			Object[] ret = new Object[r.getNumFields()];
+			
+			for(int i = 0; i < r.getNumFields(); i++) {
+				Class<? extends Value> stratosphereType = StratosphereRelUtils.getTypeClass( targetTypes.get(i).getClass() );
+				Value resultVal = r.getField(i, stratosphereType);
+				Object java =  ( (JavaValue) resultVal).getObjectValue();
+				ret[i] = java;
+			}
+			return ret;
+		}
 		public void expectRow(int rowId, List<?> elements) {
 			List<?> copy = ImmutableList.copyOf(elements);
 			
 			Record r = result.get(rowId);
+			Object[] javaRec = recordToJava(r, copy);
 			for(int i = 0; i < r.getNumFields(); i++) {
-				Class<? extends Value> stratosphereType = StratosphereRelUtils.getTypeClass( copy.get(i).getClass() );
-				Value resultVal = r.getField(i, stratosphereType);
-				Object java =  ( (JavaValue) resultVal).getObjectValue();
-				// Assert.assertEquals("Returned types to not match", java.getClass(), stratosphereType);
-				Assert.assertEquals("Values not equal", copy.get(i), java);
+				if(!copy.get(i).equals(javaRec[i])) {
+					// debug output.
+					System.err.print("[");
+					for(Object o: javaRec) {
+						System.err.print(o.toString()+" ,");
+					}
+					System.err.print("]\n");
+					Assert.fail("Values not equal");
+				}
 			}
 		}
 	}
