@@ -8,6 +8,7 @@ import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
 import net.hydromatic.avatica.Cursor;
 import net.hydromatic.avatica.Meta;
+import net.hydromatic.optiq.runtime.ObjectEnumeratorCursor;
 
 public class StratosphereMeta implements Meta {
 
@@ -211,15 +212,12 @@ public class StratosphereMeta implements Meta {
 
 	@Override
 	public Cursor createCursor(AvaticaResultSet resultSet) {
-		// TODO Auto-generated method stub
-		return null;
+		System.err.println("CreateCursor");
+		return new StratosphereCursor( (StratosphereResultSet) resultSet);
 	}
 
 	@Override
 	public AvaticaPrepareResult prepare(AvaticaStatement statement, String sql) {
-		// I guess this is where the magic happens
-		System.err.println("Call to prepare "+sql);
-		
 		return new StratospherePrepareResult(statement, sql);
 	}
 
