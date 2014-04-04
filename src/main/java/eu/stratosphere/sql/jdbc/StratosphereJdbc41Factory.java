@@ -1,5 +1,8 @@
 package eu.stratosphere.sql.jdbc;
 
-public class StratosphereJdbc41Factory {
+import net.hydromatic.avatica.AvaticaJdbc40Factory;
 
+public class StratosphereJdbc41Factory extends AvaticaJdbc40Factory {
+
+	
 }
