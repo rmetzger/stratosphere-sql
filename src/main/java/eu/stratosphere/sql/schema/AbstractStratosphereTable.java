@@ -8,15 +8,7 @@ import net.hydromatic.linq4j.expressions.Expression;
 import net.hydromatic.optiq.QueryableTable;
 import net.hydromatic.optiq.Schema.TableType;
 import net.hydromatic.optiq.SchemaPlus;
-import net.hydromatic.optiq.Statistic;
-import net.hydromatic.optiq.Statistics;
 import net.hydromatic.optiq.TranslatableTable;
-
-import org.eigenbase.rel.RelNode;
-import org.eigenbase.relopt.RelOptTable;
-import org.eigenbase.relopt.RelOptTable.ToRelContext;
-import org.eigenbase.reltype.RelDataType;
-import org.eigenbase.reltype.RelDataTypeFactory;
 
 
 public abstract class AbstractStratosphereTable implements TranslatableTable, QueryableTable {

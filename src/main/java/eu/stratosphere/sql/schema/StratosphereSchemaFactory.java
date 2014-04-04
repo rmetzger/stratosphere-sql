@@ -2,7 +2,6 @@ package eu.stratosphere.sql.schema;
 
 import java.io.File;
 
-import eu.stratosphere.api.java.DataSet;
 import net.hydromatic.linq4j.function.Function1;
 import net.hydromatic.optiq.Schema;
 import net.hydromatic.optiq.SchemaPlus;

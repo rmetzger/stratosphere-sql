@@ -20,7 +20,6 @@ import org.eigenbase.util.Pair;
 
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.io.CsvInputFormat;
-import eu.stratosphere.api.java.record.io.CsvInputFormat.ConfigBuilder;
 import eu.stratosphere.sql.relOpt.StratosphereDataSource;
 import eu.stratosphere.sql.relOpt.StratosphereRelUtils;
 import eu.stratosphere.sql.schema.JsonSchemaUtils.FieldType;

@@ -8,7 +8,6 @@ import net.hydromatic.avatica.AvaticaResultSet;
 import net.hydromatic.avatica.AvaticaStatement;
 import net.hydromatic.avatica.Cursor;
 import net.hydromatic.avatica.Meta;
-import net.hydromatic.optiq.runtime.ObjectEnumeratorCursor;
 
 public class StratosphereMeta implements Meta {
 

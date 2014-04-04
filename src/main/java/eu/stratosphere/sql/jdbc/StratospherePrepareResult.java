@@ -22,29 +22,29 @@ public class StratospherePrepareResult implements AvaticaPrepareResult {
 		System.err.println("GetColList");
 		int i = 1;
 		return ImmutableList.of( new ColumnMetaData( //
-		          i, // ordinal
-		          false, // autoIncrement
-		          true, // caseSensitive
-		          false, // searchable
-		          false, // currency
-		          ResultSetMetaData.columnNoNulls, //nullability 
-		          false, // signed
-		          10, // display size.
-		          "test1", // label
-		          "test2", // columnname
-		          "test3", // schemaname
-		          0, // precision
-		          0, // scale
-		          "test3.1", // tablename is null so sqlline doesn't try to retrieve primary keys.
-		          "test4", // catalogname
-		          Rep.LONG.ordinal(),  // sql type
-		          "test5", // typename
-		          true, // readonly
-		          false, // writable
-		          false, // definitely writable
-		          "none", // column class name
-		          ColumnMetaData.Rep.BOOLEAN // Dummy value for representation as it doesn't apply in drill's case.
-		          ));
+					i, // ordinal
+					false, // autoIncrement
+					true, // caseSensitive
+					false, // searchable
+					false, // currency
+					ResultSetMetaData.columnNoNulls, //nullability
+					false, // signed
+					10, // display size.
+					"test1", // label
+					"test2", // columnname
+					"test3", // schemaname
+					0, // precision
+					0, // scale
+					"test3.1", // tablename is null so sqlline doesn't try to retrieve primary keys.
+					"test4", // catalogname
+					Rep.LONG.ordinal(),  // sql type
+					"test5", // typename
+					true, // readonly
+					false, // writable
+					false, // definitely writable
+					"none", // column class name
+					ColumnMetaData.Rep.BOOLEAN // Dummy value for representation as it doesn't apply in drill's case.
+					));
 	}
 
 	@Override
@@ -57,11 +57,11 @@ public class StratospherePrepareResult implements AvaticaPrepareResult {
 		System.err.println("getParameterList");
 		return null;
 	}
-	
+
 
 //	final String sql;
 //	  final DrillColumnMetaDataList columns = new DrillColumnMetaDataList();
-//	  
+//
 //	  public DrillPrepareResult(String sql) {
 //	    super();
 //	    this.sql = sql;

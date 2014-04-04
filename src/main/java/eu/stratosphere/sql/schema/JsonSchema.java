@@ -9,11 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jline.internal.Log;
 import net.hydromatic.optiq.SchemaPlus;
 import net.hydromatic.optiq.Table;
 import net.hydromatic.optiq.impl.AbstractSchema;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
@@ -46,7 +47,7 @@ import eu.stratosphere.sql.schema.jsonAdapters.CustomSchemaAdapterAdapter;
  *
  */
 public class JsonSchema extends AbstractSchema {
-
+	private static final Log LOG = LogFactory.getLog(JsonSchema.class);
 	public static Map<String, JsonSchemaAdapter> adapters = new HashMap<String, JsonSchemaAdapter>();
 	
 	public static String JSON_FILE_PATH_KEY = "jsonFilePath";
@@ -57,7 +58,7 @@ public class JsonSchema extends AbstractSchema {
 
 	public static void registerAdapter(JsonSchemaAdapter adapter) {
 		final String type = adapter.getTypeString();
-		Log.info("Registering schema adapter for '"+type+"'");
+		LOG.info("Registering schema adapter for '"+type+"'");
 		adapters.put(type, adapter);
 	}
 	static {
@@ -134,7 +135,7 @@ public class JsonSchema extends AbstractSchema {
 		rootNode.put(JSON_FILE_PATH_KEY, file.getAbsolutePath());
 		JsonNode typeNode = rootNode.get(JSON_TYPE_KEY);
 		if(typeNode == null) {
-			Log.warn("Json schema in file "+file.getAbsolutePath()+" is missing a type definition. Ignoring schema");
+			LOG.warn("Json schema in file "+file.getAbsolutePath()+" is missing a type definition. Ignoring schema");
 			return null;
 		}
 		return rootNode;
@@ -155,7 +156,7 @@ public class JsonSchema extends AbstractSchema {
 		}
 		@Override
 		public void addTable(String name, AbstractStratosphereTable tbl) {
-			Log.info("Registering table '"+name+"'");
+			LOG.info("Registering table '"+name+"'");
 			if(tableMap.put(name, tbl) != null) {
 				throw new RuntimeException("Table "+name+" already registered");
 			}

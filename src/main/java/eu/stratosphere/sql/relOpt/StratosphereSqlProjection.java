@@ -31,7 +31,6 @@ import org.eigenbase.sql.SqlKind;
 import org.eigenbase.util.Pair;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 
 import eu.stratosphere.api.common.operators.Operator;
 import eu.stratosphere.api.java.record.functions.MapFunction;
