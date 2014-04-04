@@ -21,6 +21,24 @@ import org.codehaus.jackson.map.ObjectMapper;
  *
  * To implement a new JsonSchema-based adapter, you have to implement the
  * {@link JsonSchemaAdapter} interface. Then, register the class here.
+ * 
+ * Documentation for the Json-based schemas. (See also the {@link StratosphereSchemaFactory})
+ * 
+ * This class is doing the following:
+ *  - it scans the directory the user is passing as (jsonSchemaStoreDir) for json files.
+ *  	this is done in the (JsonSchema constructor)
+ *  - for each file, it calls {@link JsonSchema#parseFile(File)}, there, we use Jackson to
+ *  	map the JSON file into an internal object representation.
+ *  - the {@link JsonSchema#parseFile(File)} method is reading only one property in the JSON file,
+ *  	namely, the "type". It then looks up if there is an adapter registered for the type.
+ *  - if there is an adapter, it calls {@link JsonSchemaAdapter#getTablesFromJson()} to extract the
+ *  	table(s) from the the JsonNode. How the extraction happens specific to the adapter.
+ *  
+ *  
+ *  How to register a {@link JsonSchemaAdapter}?
+ *  	JsonSchemaAdapters can register themselves using the {@link JsonSchema#registerAdapter(JsonSchemaAdapter)} 
+ *  	method. The method will call getTypeString() method on the adapter to get the "type" string.
+ *  
  *
  */
 public class JsonSchema extends AbstractSchema {

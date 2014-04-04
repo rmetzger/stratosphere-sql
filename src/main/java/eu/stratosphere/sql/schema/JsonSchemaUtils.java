@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.avro.SchemaBuilder.FieldTypeBuilder;
 import org.codehaus.jackson.JsonNode;
 import org.eigenbase.sql.type.SqlTypeName;
 
