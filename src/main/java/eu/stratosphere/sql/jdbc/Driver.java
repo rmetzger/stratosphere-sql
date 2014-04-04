@@ -4,7 +4,9 @@ import net.hydromatic.avatica.AvaticaFactory;
 import net.hydromatic.avatica.DriverVersion;
 import net.hydromatic.avatica.UnregisteredDriver;
 
-public class Driver extends UnregisteredDriver{
+//import net.hydromatic.avatica.;
+
+public class Driver extends UnregisteredDriver {
 	public static final String CONNECT_STRING_PREFIX = "jdbc:stratosphere:";
 	
 	static {
@@ -36,9 +38,10 @@ public class Driver extends UnregisteredDriver{
 //		}
 //	}
 	
-//	@Override
-//	protected AvaticaFactory createFactory() {
-//		System.err.println("Create factory");
-//		return new StratosphereAvaticaFactory();
-//	}
+	@Override
+	protected AvaticaFactory createFactory() {
+		System.err.println("Create factory");
+		return new StratosphereAvaticaFactory();
+	//	return new StratosphereJdbc41Factory();
+	}
 }
