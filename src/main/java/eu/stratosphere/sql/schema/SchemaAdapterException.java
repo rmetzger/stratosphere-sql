@@ -6,6 +6,10 @@ public class SchemaAdapterException extends RuntimeException {
 		super(string);
 	}
 
+	public SchemaAdapterException(String string, ClassNotFoundException e) {
+		super(string, e);
+	}
+
 	private static final long serialVersionUID = 1L;
 
 }

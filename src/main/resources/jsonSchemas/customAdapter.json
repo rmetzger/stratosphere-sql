@@ -1,0 +1,4 @@
+{
+  "type" : "customJsonAdapter",
+  "class" : "eu.stratosphere.sql.schema.jsonAdapters.DummyExampleAdapter"
+}
