@@ -40,6 +40,7 @@ import eu.stratosphere.sql.rules.StratosphereFilterRule;
 import eu.stratosphere.sql.rules.StratosphereJoinRule;
 import eu.stratosphere.sql.rules.StratosphereProjectionRule;
 import eu.stratosphere.sql.rules.StratosphereRuleSet;
+import eu.stratosphere.sql.rules.StratosphereSortRule;
 import eu.stratosphere.sql.schema.StratosphereSchemaFactory;
 import eu.stratosphere.types.Record;
 
@@ -60,10 +61,11 @@ public class Launcher	{
 	private Launcher() {
 		LOG.info("starting SQL Launcher");
 		ruleSets = new StratosphereRuleSet( ImmutableSet.of(
-					(RelOptRule) StratosphereProjectionRule.INSTANCE,
+					StratosphereProjectionRule.INSTANCE,
 					StratosphereFilterRule.INSTANCE,
 					StratosphereJoinRule.INSTANCE,
 					StratosphereAggregateRule.INSTANCE,
+					StratosphereSortRule.INSTANCE,
 					PushFilterPastJoinRule.FILTER_ON_JOIN, // Push filters into the join to extract the key columns
 					PushProjectPastJoinRule.INSTANCE,
 					PushFilterPastProjectRule.INSTANCE

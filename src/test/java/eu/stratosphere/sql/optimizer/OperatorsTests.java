@@ -2,7 +2,6 @@ package eu.stratosphere.sql.optimizer;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -14,7 +13,7 @@ import eu.stratosphere.sql.optimizer.SqlTest.SqlTestTable;
  * Test the base operators
  *
  */
-public class OperatorsTest {
+public class OperatorsTests {
 	private static SqlTest test;
 	private Object monitor = new Object();
 
@@ -83,6 +82,17 @@ public class OperatorsTest {
 		result.expectRow(0, ImmutableList.of(10, "Sales", "John", 1, "Hanspeter") );
 		result.expectRow(1, ImmutableList.of(20, "Marketing", "Pete", 2, "Ottomayer") );
 		result.expectRow(2, ImmutableList.of(30, "Accounts", "Claus", 3, "Eric") );
+	}
+	
+	@Test
+	public void orderBy() {
+		SqlTestResult result = test.execute("SELECT depName "
+				+ "FROM departments "
+				+ "ORDER BY depNo DESC");
+		result.expectRowcount(3);
+		result.expectRow(0, ImmutableList.of("Accounts") );
+		result.expectRow(1, ImmutableList.of("Marketing") );
+		result.expectRow(2, ImmutableList.of("Sales") );
 	}
 
 }

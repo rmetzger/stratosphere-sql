@@ -28,7 +28,7 @@ public class StratosphereFilterRule extends ConverterRule {
 		final FilterRel filter = (FilterRel) rel;
 		final RelTraitSet traits = filter.getTraitSet().plus(StratosphereRel.CONVENTION);
 		
-		return new StratosphereSqlFilter(filter.getCluster(), traits, convert(filter.getChild(), traits) , filter.getCondition());
+		return new StratosphereSqlFilter(filter.getCluster(), traits, convert(filter.getChild(), filter.getChild().getTraitSet().plus(StratosphereRel.CONVENTION)) , filter.getCondition());
 	}
 
 

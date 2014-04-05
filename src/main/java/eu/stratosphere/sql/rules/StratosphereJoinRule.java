@@ -27,8 +27,8 @@ public class StratosphereJoinRule extends ConverterRule {
 		final RelTraitSet traits = join.getTraitSet().plus(StratosphereRel.CONVENTION);
 		
 		return new StratosphereSqlJoin( join.getCluster(), traits, 
-				convert(join.getLeft(), traits), 
-				convert(join.getRight(), traits), 
+				convert(join.getLeft(), join.getLeft().getTraitSet().plus(StratosphereRel.CONVENTION)), 
+				convert(join.getRight(), join.getRight().getTraitSet().plus(StratosphereRel.CONVENTION)), 
 				join.getCondition(),
 				join.getJoinType(), join.getVariablesStopped()
 			);

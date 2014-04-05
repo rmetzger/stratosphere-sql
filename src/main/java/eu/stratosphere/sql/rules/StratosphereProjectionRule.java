@@ -33,7 +33,7 @@ public class StratosphereProjectionRule extends ConverterRule {
 		System.err.println("Converting projection");
 		final ProjectRel project = (ProjectRel) rel;
 		final RelTraitSet traits = project.getTraitSet().plus(StratosphereRel.CONVENTION);
-		return new StratosphereSqlProjection(project.getCluster(), traits, convert(project.getChild(), traits), project.getProjects(), project.getRowType(), 0);
+		return new StratosphereSqlProjection(project.getCluster(), traits, convert(project.getChild(), project.getChild().getTraitSet().plus(StratosphereRel.CONVENTION)), project.getProjects(), project.getRowType(), 0);
 	}
 
 }
