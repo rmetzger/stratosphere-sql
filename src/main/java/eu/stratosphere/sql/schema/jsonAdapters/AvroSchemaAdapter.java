@@ -1,16 +1,16 @@
 package eu.stratosphere.sql.schema.jsonAdapters;
 
 import java.io.File;
-
-import org.codehaus.jackson.JsonNode;
-
-import eu.stratosphere.sql.schema.JsonSchema.TableAdder;
+import eu.stratosphere.sql.schema.AvroStratosphereTable;
 import eu.stratosphere.sql.schema.JsonSchema;
 import eu.stratosphere.sql.schema.JsonSchemaAdapter;
 import eu.stratosphere.sql.schema.SchemaAdapterException;
+import org.apache.commons.io.FilenameUtils;
+import org.codehaus.jackson.JsonNode;
+
+import eu.stratosphere.sql.schema.JsonSchema.TableAdder;
 
 public class AvroSchemaAdapter implements JsonSchemaAdapter {
-
 	static {
 		JsonSchema.registerAdapter(new AvroSchemaAdapter());
 	}
@@ -21,10 +21,11 @@ public class AvroSchemaAdapter implements JsonSchemaAdapter {
 	}
 
 	@Override
-	public void getTablesFromJson(JsonNode rootNode, TableAdder tableAddedImpl,
-			File file) throws SchemaAdapterException {
-		// TODO Auto-generated method stub
-
+	public void getTablesFromJson(JsonNode rootNode, TableAdder tableAdder, File file) throws SchemaAdapterException {
+		System.err.println("Parsing JSON schema from "+rootNode);
+		final String name = FilenameUtils.removeExtension(file.getName());
+		AvroStratosphereTable table = new AvroStratosphereTable(rootNode, name);
+		tableAdder.addTable(name, table);
 	}
 
 }
