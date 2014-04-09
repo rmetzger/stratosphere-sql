@@ -64,60 +64,60 @@ public class AvroStratosphereTable extends AbstractStratosphereTable {
 		return rowType;
 	}
 
-    private Schema getSchema()  {
-        DatumReader<GenericRecord> datumReader =  new GenericDatumReader<GenericRecord>();
-        try {
-            DataFileReader reader = new DataFileReader(new File(fileSrcOperator.getFilePath()), datumReader);
-            return reader.getSchema();
-        } catch (IOException e) {
-            throw new RuntimeException("Error while accessing schema from Avro file");
-        }
-    }
+	private Schema getSchema()  {
+		DatumReader<GenericRecord> datumReader =  new GenericDatumReader<GenericRecord>();
+		try {
+			DataFileReader reader = new DataFileReader(new File(fileSrcOperator.getFilePath()), datumReader);
+			return reader.getSchema();
+		} catch (IOException e) {
+			throw new RuntimeException("Error while accessing schema from Avro file");
+		}
+	}
 
 	private void parseRowType(RelDataTypeFactory typeFactory) {
 		// parse fields
 		List<Entry<String, RelDataType>> optiqFields = new ArrayList<Entry<String,RelDataType>>();
-        Schema schema = getSchema();
+		Schema schema = getSchema();
 
-        for (Schema.Field field : schema.getFields() ) {
-            Schema.Type type = field.schema().getType();
-            Map.Entry<String, RelDataType> mapPair = null;
-            switch (type) {
-                case INT :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.INTEGER));
-                    break;
-                case BOOLEAN :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.BOOLEAN));
-                    break;
-                case BYTES :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.TINYINT));
-                    break;
-                case DOUBLE :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.DOUBLE));
-                    break;
-                case FLOAT :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.FLOAT));
-                    break;
-                case LONG :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.BIGINT));
-                    break;
-                case NULL :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.NULL));
-                    break;
-                case RECORD :
-                case STRING :
-                    mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.CHAR));
-                    break;
-                case FIXED :
-                case UNION :
-                case ARRAY :
-                case ENUM :
-                case MAP :
-                default :
-                    throw new RuntimeException("Complex Avro Data Types are not supported\n");
-            } //end switch
-            optiqFields.add(mapPair);
-        }//end for
+		for (Schema.Field field : schema.getFields() ) {
+			Schema.Type type = field.schema().getType();
+			Map.Entry<String, RelDataType> mapPair = null;
+			switch (type) {
+				case INT :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.INTEGER));
+					break;
+				case BOOLEAN :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.BOOLEAN));
+					break;
+				case BYTES :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.TINYINT));
+					break;
+				case DOUBLE :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.DOUBLE));
+					break;
+				case FLOAT :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.FLOAT));
+					break;
+				case LONG :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.BIGINT));
+					break;
+				case NULL :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.NULL));
+					break;
+				case RECORD :
+				case STRING :
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.CHAR));
+					break;
+				case FIXED :
+				case UNION :
+				case ARRAY :
+				case ENUM :
+				case MAP :
+				default :
+					throw new RuntimeException("Complex Avro Data Types are not supported\n");
+			} //end switch
+			optiqFields.add(mapPair);
+		}//end for
 
 		// create row type for optiq
 		rowType = typeFactory.createStructType(optiqFields);
