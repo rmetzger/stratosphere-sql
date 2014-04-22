@@ -17,6 +17,7 @@ import eu.stratosphere.api.java.record.io.avro.AvroRecordInputFormat;
 import eu.stratosphere.sql.relOpt.StratosphereDataSource;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
+
 import org.codehaus.jackson.JsonNode;
 import org.eigenbase.rel.RelNode;
 import org.eigenbase.relopt.RelOptTable;
@@ -25,7 +26,6 @@ import org.eigenbase.reltype.RelDataType;
 import org.eigenbase.reltype.RelDataTypeFactory;
 import org.eigenbase.sql.type.SqlTypeName;
 import org.eigenbase.util.Pair;
-
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
 import org.apache.avro.generic.GenericDatumReader;
@@ -39,16 +39,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+
+/**
+ * Read an avro schema and convert it to 
+ *
+ */
 public class AvroStratosphereTable extends AbstractStratosphereTable {
 
 	private RelDataType rowType = null;
-	FileDataSource fileSrcOperator;
+	private FileDataSource fileSrcOperator;
+	private String tableName;
+	private Schema schema;
 
-	public AvroStratosphereTable(JsonNode rootNode, String name) throws SchemaAdapterException {
+	public AvroStratosphereTable(JsonNode rootNode) throws SchemaAdapterException {
 		// parse "metadata"
 		String path = JsonSchemaUtils.getStringField(rootNode, "filePath");
+		String name = JsonSchemaUtils.getOptionalString(rootNode, "name", null);
 		path = JsonSchemaUtils.replaceFilenameVariables(path);
-		fileSrcOperator = new FileDataSource(new AvroRecordInputFormat(), path, "AvroInput: "+name);
+		fileSrcOperator = new FileDataSource(new AvroRecordInputFormat(), path, "AvroInput");
+		if(name == null) {
+			Schema s = getSchema();
+			name = s.getName();
+		}
+		this.tableName = name;
 	}
 
 	@Override
@@ -65,13 +78,16 @@ public class AvroStratosphereTable extends AbstractStratosphereTable {
 	}
 
 	private Schema getSchema()  {
-		DatumReader<GenericRecord> datumReader =  new GenericDatumReader<GenericRecord>();
-		try {
-			DataFileReader reader = new DataFileReader(new File(fileSrcOperator.getFilePath()), datumReader);
-			return reader.getSchema();
-		} catch (IOException e) {
-			throw new RuntimeException("Error while accessing schema from Avro file");
+		if(schema == null) {
+			DatumReader<GenericRecord> datumReader =  new GenericDatumReader<GenericRecord>();
+			try {
+				DataFileReader reader = new DataFileReader(new File(fileSrcOperator.getFilePath()), datumReader);
+				schema = reader.getSchema();
+			} catch (IOException e) {
+				throw new RuntimeException("Error while accessing schema from Avro file");
+			}
 		}
+		return schema;
 	}
 
 	private void parseRowType(RelDataTypeFactory typeFactory) {
@@ -106,7 +122,7 @@ public class AvroStratosphereTable extends AbstractStratosphereTable {
 					break;
 				case RECORD :
 				case STRING :
-					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.CHAR));
+					mapPair = Pair.of(field.name(),typeFactory.createSqlType(SqlTypeName.VARCHAR));
 					break;
 				case FIXED :
 				case UNION :
@@ -128,6 +144,10 @@ public class AvroStratosphereTable extends AbstractStratosphereTable {
 	@Override
 	public Statistic getStatistic() {
 		return Statistics.UNKNOWN;
+	}
+
+	public String getName() {
+		return this.tableName;
 	}
 
 }

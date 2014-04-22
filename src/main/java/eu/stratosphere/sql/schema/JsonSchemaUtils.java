@@ -18,10 +18,10 @@ public class JsonSchemaUtils {
 		return field;
 	}
 
-	public static String getOptionalString(JsonNode node, String fieldName, String def) {
+	public static String getOptionalString(JsonNode node, String fieldName, String default_) {
 		JsonNode field = node.get(fieldName);
 		if(field == null) {
-			return def;
+			return default_;
 		} else {
 			return field.asText();
 		}

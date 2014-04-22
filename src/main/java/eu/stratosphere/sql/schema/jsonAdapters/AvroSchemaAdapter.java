@@ -23,9 +23,9 @@ public class AvroSchemaAdapter implements JsonSchemaAdapter {
 	@Override
 	public void getTablesFromJson(JsonNode rootNode, TableAdder tableAdder, File file) throws SchemaAdapterException {
 		System.err.println("Parsing JSON schema from "+rootNode);
-		final String name = FilenameUtils.removeExtension(file.getName());
-		AvroStratosphereTable table = new AvroStratosphereTable(rootNode, name);
-		tableAdder.addTable(name, table);
+	//	final String name = FilenameUtils.removeExtension(file.getName());
+		AvroStratosphereTable table = new AvroStratosphereTable(rootNode);
+		tableAdder.addTable(table.getName(), table);
 	}
 
 }
