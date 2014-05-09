@@ -59,10 +59,11 @@ public class StratosphereRelUtils {
 		throw new RuntimeException("Unsupported type "+type);
 	}
 
-	public static Class<? extends Key> getKeyTypeClass(RelDataType type) {
+	@SuppressWarnings("unchecked")
+	public static Class<? extends Key<?>> getKeyTypeClass(RelDataType type) {
 		final Class<? extends Value> val = getTypeClass(type);
 		if(Key.class.isAssignableFrom(val) ) {
-			return (Class<? extends Key>) val;
+			return (Class<? extends Key<?>>) val;
 		}
 		throw new RuntimeException("RelDataType is not a Key: "+type+" to val "+val);
 	}

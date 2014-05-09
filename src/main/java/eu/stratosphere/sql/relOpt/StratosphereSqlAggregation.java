@@ -175,7 +175,7 @@ public class StratosphereSqlAggregation extends AggregateRelBase implements Stra
 		for(int col = 0; col < getGroupCount(); col++) {
 			if(groups.get(col)) {
 				RelDataType colType = getInput(0).getRowType().getFieldList().get(col).getType();
-				Class<? extends Key> colTypeClass = StratosphereRelUtils.getKeyTypeClass(colType);
+				Class<? extends Key<?>> colTypeClass = StratosphereRelUtils.getKeyTypeClass(colType);
 				aggBuilder.keyField(colTypeClass, col);
 				keyTypes[i] = colTypeClass;
 				keyIdx[i] = col;

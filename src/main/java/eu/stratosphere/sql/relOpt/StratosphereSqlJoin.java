@@ -70,15 +70,15 @@ public class StratosphereSqlJoin extends JoinRelBase implements RelNode, Stratos
 		Operator leftOperator = StratosphereRelUtils.toStratoRel(leftRel).getStratosphereOperator();
 		Operator rightOperator = StratosphereRelUtils.toStratoRel(rightRel).getStratosphereOperator();
 
-		Class<? extends Key>[] types = new Class[leftKeys.size()];
+		Class<? extends Key<?>>[] types = new Class[leftKeys.size()];
 		for(int i = 0; i < leftKeys.size(); i++) {
 
 			//leftRel.getExpectedInputRowType(leftKeys.get(i));
 			RelDataType leftRow = leftRel.getRowType().getFieldList().get(leftKeys.get(i)).getType();
-			Class<? extends Key> leftType = StratosphereRelUtils.getKeyTypeClass(leftRow);
+			Class<? extends Key<?>> leftType = StratosphereRelUtils.getKeyTypeClass(leftRow);
 
 			RelDataType rightRow = rightRel.getRowType().getFieldList().get(rightKeys.get(i)).getType();
-			Class<? extends Key> rightType = StratosphereRelUtils.getKeyTypeClass(rightRow);
+			Class<? extends Key<?>> rightType = StratosphereRelUtils.getKeyTypeClass(rightRow);
 			// check for equality
 			if(!leftType.equals(rightType)) {
 				throw new StratosphereSQLException("Types not equal.");

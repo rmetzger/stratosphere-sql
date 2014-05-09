@@ -62,7 +62,7 @@ public class StratosphereSqlSort extends SortRel implements StratosphereRel {
 		Ordering order = new Ordering();
 		RelCollation coll = getCollation();
 		for(RelFieldCollation fieldColl : coll.getFieldCollations()) {
-			Class<? extends Key> keyClass = StratosphereRelUtils.getKeyTypeClass(getInput(0).getRowType().getFieldList().get(fieldColl.getFieldIndex()).getType());
+			Class<? extends Key<?>> keyClass = StratosphereRelUtils.getKeyTypeClass(getInput(0).getRowType().getFieldList().get(fieldColl.getFieldIndex()).getType());
 			sortBuilder.keyField(keyClass, fieldColl.getFieldIndex());
 			order.appendOrdering(fieldColl.getFieldIndex(), keyClass, Order.valueOf(fieldColl.direction.name()));
 		}
