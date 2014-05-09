@@ -1,4 +1,4 @@
 {
   "type" : "avro",
-  "filePath": "{{pwd}}/src/main/resources/sampleTables/student.avro"
+  "filePath": "file://{{pwd}}/src/main/resources/sampleTables/student.avro"
 }

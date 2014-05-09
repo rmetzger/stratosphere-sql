@@ -40,5 +40,5 @@
   ],
   "fieldDelimiter": "|",
   "rowDelimiter": "\n",
-  "filePath": "{{pwd}}/src/main/resources/sampleTables/tpch/orders.tbl"
+  "filePath": "file://{{pwd}}/src/main/resources/sampleTables/tpch/orders.tbl"
 }

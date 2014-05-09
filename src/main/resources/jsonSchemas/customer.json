@@ -13,5 +13,5 @@
   "primaryKey": "customerId",
   "columnDelimiter": ",",
   "rowDelimiter": "\n",
-  "filePath": "{{pwd}}/src/main/resources/sampleTables/simple.csv"
+  "filePath": "file://{{pwd}}/src/main/resources/sampleTables/simple.csv"
 }

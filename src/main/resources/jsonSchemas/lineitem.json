@@ -71,5 +71,5 @@
   "primaryKey": "customerId",
   "fieldDelimiter": "|",
   "rowDelimiter": "\n",
-  "filePath": "{{pwd}}/src/main/resources/sampleTables/tpch/lineitem.tbl"
+  "filePath": "file://{{pwd}}/src/main/resources/sampleTables/tpch/lineitem.tbl"
 }

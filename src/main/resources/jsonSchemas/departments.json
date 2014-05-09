@@ -16,5 +16,5 @@
   ],
   "columnDelimiter": ",",
   "rowDelimiter": "\n",
-  "filePath": "{{pwd}}/src/main/resources/sampleTables/departments.csv"
+  "filePath": "file://{{pwd}}/src/main/resources/sampleTables/departments.csv"
 }

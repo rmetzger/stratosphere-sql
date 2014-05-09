@@ -12,8 +12,12 @@
  **********************************************************************************************************************/
 package eu.stratosphere.sql.schema;
 
+import eu.stratosphere.api.avro.FSDataInputStreamWrapper;
 import eu.stratosphere.api.common.operators.FileDataSource;
 import eu.stratosphere.api.java.record.io.avro.AvroRecordInputFormat;
+import eu.stratosphere.core.fs.FSDataInputStream;
+import eu.stratosphere.core.fs.FileSystem;
+import eu.stratosphere.core.fs.Path;
 import eu.stratosphere.sql.relOpt.StratosphereDataSource;
 import net.hydromatic.optiq.Statistic;
 import net.hydromatic.optiq.Statistics;
@@ -81,7 +85,11 @@ public class AvroStratosphereTable extends AbstractStratosphereTable {
 		if(schema == null) {
 			DatumReader<GenericRecord> datumReader =  new GenericDatumReader<GenericRecord>();
 			try {
-				DataFileReader reader = new DataFileReader(new File(fileSrcOperator.getFilePath()), datumReader);
+				Path p = new Path(fileSrcOperator.getFilePath());
+				FileSystem fs = p.getFileSystem();
+				FSDataInputStream schemaFile = fs.open(p);
+				DataFileReader reader = new DataFileReader(
+						new FSDataInputStreamWrapper(schemaFile, fs.getFileStatus(p).getLen()), datumReader);
 				schema = reader.getSchema();
 			} catch (IOException e) {
 				throw new RuntimeException("Error while accessing schema from Avro file");
